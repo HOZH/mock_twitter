@@ -229,7 +229,7 @@ app.post("/adduser", (req, res) => {
         link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
         mailOptions = {
             to: req.body.email,
-            subject: "Please confirm your Email account",
+            subject: "qien Please confirm your Email account",
             html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">" + text + "</a>"
         }
         smtpTransport.sendMail(mailOptions, function (error, response) {
