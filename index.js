@@ -5,6 +5,7 @@ const print = require('debug')('app:print')
 const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
 const dbDebugger = require('debug')('app:db')
+const additemDebugger = require('debug')('app:additem')
 const morgan = require('morgan')
 const nodemailer = require('nodemailer');
 const uuid = require('uuid');
@@ -55,8 +56,17 @@ const userSchema = new mongoose.Schema({
     password: String,
     active: Boolean
 })
+const itemSchema = new mongoose.Schema({
+    uuid: String,
+    username: String,
+    property: Object,
+    retweeted: Number,
+    content: Object,
+    timestamp: { type: Number, default: Date.now() / 1000 }
+})
 
 const User = mongoose.model('User', userSchema)
+const Item = mongoose.model('Item', itemSchema)
 
 const smtpTransport = nodemailer.createTransport(({
     port: 25,
@@ -89,31 +99,13 @@ app.use(function (req, res, next) {
 
 app.get('/', (req, res) => {
 
-    let token = '1'
-    const text = 'key: <' + token + '>'
-    let link = "#"
+    print(res.session)
+    loginDebugger(req.session, "session")
 
-    link = "something";
-    mailOptions = {
-        to: "hong1.zheng@stonybrook.edu",
-        subject: "mock_twitter Please confirm your Email account",
-        html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">" + text + "</a>"
-    }
+    req.session.count = (req.session.count || 0) + 1
+    loginDebugger(req.session.count)
 
-    smtpTransport.sendMail(mailOptions, function (error, response) {
-        if (error) {
-            adduserDebugger('error on sending email', error)
-            // return -1
-            return res.send({ status: "error" })
 
-        } else {
-            // return 
-            console.log(123)
-            res.send({ status: "OK" })
-
-            // return 0
-        }
-    });
     res.send('ok')
 })
 
@@ -172,6 +164,9 @@ app.post('/login', (req, res) => {
     // req.session.count = (req.session.count || 0) + 1
     // loginDebugger(req.session.count)
 
+
+    // return res.send("OK")
+
     loginUser(req, res)
 
 
@@ -187,16 +182,18 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
 
 
-
-
-
-
-    //  res.send(req.session.count)
     req.session = null
     res.send({ status: "OK" })
 
 })
 
+
+app.post('/additem', (req, res) => {
+
+
+    createItem(req,res)
+
+})
 
 
 
@@ -249,7 +246,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
 
     const token = uuid.v4()
 
-    
+
 
     const user = new User({
 
@@ -322,18 +319,111 @@ async function loginUser(req, res) {
 
 
     if (user)
-      
+
         if (user.active) {
-            
+
             loginDebugger("log in performed")
+            req.session.isLogin = true
+            req.session.username = req.body.username
             return res.send({ status: "OK" })
-           
+
         }
-     
-    
-    loginDebugger('fail to log in', user ? "current account has not been enabled":"username/password does not match record on the server")
+
+
+    loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
     return res.send({ status: "error" })
+
+
+}
+
+
+async function createItem(req, res) {
+
+
+
+    if (false === (req.session.username || false)){
+
+        additemDebugger('need to login first')
+        return res.send({ status: "error", error: 'just stop asking' })
+
+    }
+
+    if (!req.body['content']) {
+
+        additemDebugger('empty content')
+        return res.send({ status: "error", error: 'empty content' })
+
+    }
+
+    const childType = req.body.childType
+
+    if (childType !== 'retweet' && childType !== 'reply' && childType !== null)
+    { 
+        additemDebugger('wrong child type')
+        return res.send({ status: "error", error: 'wrong childType' })
+
+    }
+    // let item
+    // if (childType === "retweet") {
+
+    //     item = new Item({
+
+    //         username: req.session.username,
+    //         property: { likes: 0 },
+    //         retweeted: 0,
+    //         content: req.body.content,
+
+    //     })
+
+    // }
+    // else if (childType === "reply") {
+    //     item = new Item({
+
+    //         username: req.session.username,
+    //         property: { likes: 0 },
+    //         retweeted: 0,
+    //         content: req.body.content,
+
+    //     })
+
+    // }
+    // else {
+
+
+    //     item = new Item({
+
+    //         username: req.session.username,
+    //         property: { likes: 0 },
+    //         retweeted: 0,
+    //         content: req.body.content,
+
+    //     })
+
+    // }
+
+    const token = uuid.v4()
+
+    const item = new Item({
+        uuid: token,
+        username: req.session.username,
+        property: { likes: 0 },
+        retweeted: 0,
+        content: req.body.content,
+
+    })
+
+
+    const result = await item.save()
+
+    dbDebugger(result)
+
+
+
+
+    return res.send({ status: 'OK', id: token })
+
+
 
 
 
