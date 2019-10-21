@@ -191,8 +191,12 @@ app.post('/logout', (req, res) => {
 app.post('/additem', (req, res) => {
 
 
-    createItem(req,res)
+    createItem(req, res)
 
+})
+
+app.get('/item', (req,res)=>{
+    get_item(req,res)
 })
 
 
@@ -342,7 +346,7 @@ async function createItem(req, res) {
 
 
 
-    if (false === (req.session.username || false)){
+    if (false === (req.session.username || false)) {
 
         additemDebugger('need to login first')
         return res.send({ status: "error", error: 'just stop asking' })
@@ -358,8 +362,7 @@ async function createItem(req, res) {
 
     const childType = req.body.childType
 
-    if (childType !== 'retweet' && childType !== 'reply' && childType !== null)
-    { 
+    if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
         additemDebugger('wrong child type')
         return res.send({ status: "error", error: 'wrong childType' })
 
@@ -431,6 +434,18 @@ async function createItem(req, res) {
 
 }
 
+async function get_item(req, res) {
+    dbDebugger(req.body)
+    const item = await Item.findOne({ id: req.body.id })
+    dbDebugger(item)
+    if (item) {
+        return res.send({ 
+            status: "OK",
+            item: item   
+        })
+    }
+    return res.send({ status: "error", error: "item not found" })
+}
 
 
 
