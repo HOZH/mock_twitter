@@ -193,11 +193,13 @@ app.post('/additem', (req, res) => {
 
 })
 
-app.get('/item/:itemID', (req,res)=>{
-    get_item(req,res)
+app.get('/item/:itemID', (req, res) => {
+    get_item(req, res)
 })
 
-
+app.post('/search', (req, res) => {
+    search_item(req, res)
+})
 
 
 
@@ -433,25 +435,47 @@ async function createItem(req, res) {
 }
 
 async function get_item(req, res) {
-    console.log("in function get_item");
-    console.log("looking for item with id: "+req.params.itemID);
+    //console.log("in function get_item");
+    //console.log("looking for item with id: "+req.params.itemID);
     id = req.params.itemID;
     dbDebugger(req.body);
     const item = await Item.findOne({ id: id })
-    console.log("item found :"+item);
+    //console.log("item found :"+item);
     dbDebugger(item)
     if (item) {
-        console.log("returning item with OK");
-        return res.send({ 
+        //console.log("returning item with OK");
+        return res.send({
             status: "OK",
-            item: item   
+            item: item
         })
     }
-    console.log("item not found, returning error");
+    //console.log("item not found, returning error");
     return res.send({ status: "error", error: "item not found" })
 }
 
-async function search_item(req,res){
+async function search_item(req, res) {
+    console.log("searching items")
+    timestamp = req.body.timestamp
+    console.log("time stamp is: ", timestamp)
+    limit = req.body.limit
+    console.log("limit is: ", limit)
+    items = Item.find({ timestamp: timestamp })
+    if (item) {
+        console.log("found: ", items.length)
+        while (items.length > limit) {
+            console.log("too many items, poping 1");
+            items.pop();
+        }
+        return res.send({
+            status: "OK",
+            items: items
+        })
+    }
+
+    return res.send({
+        status: "error",
+        error: "items not found"
+    })
 
 }
 
