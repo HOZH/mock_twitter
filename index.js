@@ -1,5 +1,4 @@
-
-
+//imports
 const express = require('express')
 const print = require('debug')('app:print')
 const adduserDebugger = require('debug')('app:adduser')
@@ -113,17 +112,13 @@ app.post('/adduser', (req, res) => {
 
     adduserDebugger(req.body)
 
-
     const requestError = isValidateAdduserRequest(req.body)
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
         return res.send({ status: "error" })
-
-
     }
 
-    // isUsernameEmailUnique().then(isUnique => adduserDebugger('username and email are both unique =', isUnique===0))
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
 
         const isUnique = value === 0
@@ -132,65 +127,29 @@ app.post('/adduser', (req, res) => {
         if (!isUnique)
             return res.send({ status: "error" })
 
-
-
-
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
-
-
-
-
     })
-
-
 
 })
 
 
 app.post('/verify', (req, res) => {
-
-
     activateUser(req, res)
-
-
-
 })
 
 app.post('/login', (req, res) => {
-
-    // loginDebugger(req.session, "session")
-
-    // req.session.count = (req.session.count || 0) + 1
-    // loginDebugger(req.session.count)
-
-
-    // return res.send("OK")
-
     loginUser(req, res)
-
-
-
-
-
-
-    //  res.send(req.session.count)
-    // res.send({ status: "OK" })
-
 })
 
 app.post('/logout', (req, res) => {
-
-
     req.session = null
     res.send({ status: "OK" })
-
 })
 
 
 app.post('/additem', (req, res) => {
     createItem(req, res)
-
 })
 
 app.get('/item/:itemID', (req, res) => {
@@ -200,9 +159,6 @@ app.get('/item/:itemID', (req, res) => {
 app.post('/search', (req, res) => {
     search_item(req, res)
 })
-
-
-
 
 
 
@@ -232,12 +188,9 @@ function isValidateAdduserRequest(request) {
 
 async function isUsernameEmailUnique(username, email) {
 
-
     const user = await User
         .find()
         .or([{ username: username }, { email: email }])
-
-
 
     dbDebugger(username, email, "record found:", user)
 
@@ -419,8 +372,7 @@ async function createItem(req, res) {
 
     const result = await item.save()
 
-    dbDebugger("printing result:")
-    dbDebugger(result)
+    dbDebugger("printing result:", result)
 
 
 
@@ -462,7 +414,7 @@ async function search_item(req, res) {
     limit = req.body.limit;
     dbDebugger("limit is: ", limit);
     items = Item.find({ timestamp: timestamp });
-    if (item) {
+    if (items) {
         if (limit == undefined) {
             return res.send({ status: "OK", items: items })
         }
