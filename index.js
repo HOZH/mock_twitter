@@ -338,14 +338,7 @@ async function search_item(req, res) {
     dbDebugger("time stamp is: ", timestamp);
     limit = req.body.limit;
     dbDebugger("limit is: ", limit);
-    items = Item.find();
-    for(let i =0; i<items.length;i++){
-        dbDebugger("~~~i: ",i);
-        //dbDebugger(items[i]);
-        dbDebugger("id: ",items[i].id);
-        dbDebugger("username: ",items[i].username);
-        dbDebugger("ts",items[i].timestamp);
-    }
+    const items = await Item.find({})
     if (items) {
         if (limit == undefined) {
             return res.send({ status: "OK", items: items })
