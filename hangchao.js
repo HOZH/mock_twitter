@@ -118,46 +118,8 @@ app.get('/', (req, res) => {
 // })
 
 app.post("/adduser", (req, res) => {
-    console.log(req.body.email)
-    User.find({ email: req.body.email }).then((err, data) => {
-        if (data && req.body.email == data.email) {
-            return res.send({ status: "ERROR" })
-        }
-        let token = uuidv4();
-        var a = new User({
-            username: req.body.username,
-            email: req.body.email,
-            password: req.body.password,
-            uuid: token,
-            active: "false"
-        });
-        a.save(function (err) {
-            if (err) return res.send({ status: "ERROR" })
-        });
 
-        let text = 'key: <' + token + '>'
-        let link = "#"
-        link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
-        mailOptions = {
-            to: req.body.email,
-            subject: "Please confirm your Email account",
-            html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">" + text + "</a>"
-        }
-        smtpTransport.sendMail(mailOptions, function (error, response) {
-            if (error) {
-                console.log(error);
-            } else {
-                res.send({ status: "OK" });
-            }
-        });
-        let options = {
-            maxAge: 1000 * 60 * 15, // would expire after 15 minutes
-            httpOnly: true, // The cookie only accessible by the web server
-            // signed: true // Indicates if the cookie should be signed
-        }
-        res.cookie("userData", a, options);
-        res.send({ status: "OK" });
-    });
+    res.send('ok')
 });
 
 app.post("/login", (req, res) => {

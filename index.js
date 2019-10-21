@@ -3,6 +3,7 @@
 const express = require('express')
 const print = require('debug')('app:print')
 const adduserDebugger = require('debug')('app:adduser')
+const loginDebugger = require('debug')('app:login')
 const dbDebugger = require('debug')('app:db')
 const morgan = require('morgan')
 const nodemailer = require('nodemailer');
@@ -10,10 +11,20 @@ const uuid = require('uuid');
 const Joi = require('joi')
 const path = require('path')
 const mongoose = require('mongoose')
+const cookieSession = require('cookie-session')
+
 
 
 
 const app = express()
+
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1', 'key2'],
+
+    // Cookie Options
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 //setup res.body
 app.use(express.json())
@@ -93,7 +104,7 @@ app.get('/', (req, res) => {
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({ status: "ERROR" })
+            return res.send({ status: "error" })
 
         } else {
             // return 
@@ -115,7 +126,7 @@ app.post('/adduser', (req, res) => {
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.status(400).send({ status: "ERROR" })
+        return res.send({ status: "error" })
 
 
     }
@@ -127,7 +138,7 @@ app.post('/adduser', (req, res) => {
         adduserDebugger('username and email are both unique =', isUnique)
 
         if (!isUnique)
-            return res.status(400).send({ status: "ERROR" })
+            return res.send({ status: "error" })
 
 
 
@@ -141,14 +152,6 @@ app.post('/adduser', (req, res) => {
     })
 
 
-    // adduserDebugger('username and email are both unique',isUnique)
-    // if(!isUnique)
-    //     return res.status(400).send("either username or email is not unique")
-
-
-
-    // isUsernameEmailUnique()
-    // res.send(req.body)
 
 })
 
@@ -159,6 +162,38 @@ app.post('/verify', (req, res) => {
     activateUser(req, res)
 
 
+
+})
+
+app.post('/login', (req, res) => {
+
+    // loginDebugger(req.session, "session")
+
+    // req.session.count = (req.session.count || 0) + 1
+    // loginDebugger(req.session.count)
+
+    loginUser(req, res)
+
+
+
+
+
+
+    //  res.send(req.session.count)
+    // res.send({ status: "OK" })
+
+})
+
+app.post('/logout', (req, res) => {
+
+
+
+
+
+
+    //  res.send(req.session.count)
+    req.session = null
+    res.send({ status: "OK" })
 
 })
 
@@ -214,6 +249,8 @@ async function createUserAndSentEmail(username, email, password, active, req, re
 
     const token = uuid.v4()
 
+    
+
     const user = new User({
 
         username: username,
@@ -235,14 +272,14 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     mailOptions = {
         to: req.body.email,
         subject: "mock_twitter Please confirm your Email account",
-        html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">" + text + "</a>"
+        html: text
     }
 
     smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({ status: "ERROR" })
+            return res.send({ status: "error" })
 
         } else {
             return res.send({ status: "OK" })
@@ -269,7 +306,37 @@ async function activateUser(req, res) {
         return res.send({ status: "OK" })
 
     dbDebugger("something went wrong when update active property")
-    return res.state(400).send({ status: "ERROR" })
+    return res.send({ status: "error" })
+
+}
+
+async function loginUser(req, res) {
+
+    dbDebugger(req.body)
+    const user = await User.findOne({ username: req.body.username, password: req.body.password })
+
+
+    dbDebugger(user)
+    // dbDebugger('user enabled?',user.active)
+    // dbDebugger("current user enabled = ", user.active)
+
+
+    if (user)
+      
+        if (user.active) {
+            
+            loginDebugger("log in performed")
+            return res.send({ status: "OK" })
+           
+        }
+     
+    
+    loginDebugger('fail to log in', user ? "current account has not been enabled":"username/password does not match record on the server")
+    req.session = null
+    return res.send({ status: "error" })
+
+
+
 
 
 }
