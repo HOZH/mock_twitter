@@ -454,12 +454,13 @@ async function get_item(req, res) {
 }
 
 async function search_item(req, res) {
-    console.log("searching items")
-    timestamp = req.body.timestamp
-    console.log("time stamp is: ", timestamp)
-    limit = req.body.limit
-    console.log("limit is: ", limit)
-    items = Item.find({ timestamp: timestamp })
+    console.log("in function searching items");
+    console.log("req.body = ", req.body)
+    timestamp = req.body.timestamp;
+    console.log("time stamp is: ", timestamp);
+    limit = req.body.limit;
+    console.log("limit is: ", limit);
+    items = Item.find({ timestamp: timestamp });
     if (item) {
         console.log("found: ", items.length)
         while (items.length > limit) {
