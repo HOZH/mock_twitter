@@ -62,7 +62,7 @@ const itemSchema = new mongoose.Schema({
     property: Object,
     retweeted: Number,
     content: Object,
-    timestamp: { type: Number, default: Date.now() / 1000 }
+    timestamp: { type: Number, default: Date.now() * 1000 }
 })
 
 const User = mongoose.model('User', userSchema)
@@ -419,6 +419,7 @@ async function createItem(req, res) {
 
     const result = await item.save()
 
+    dbDebugger("printing result:")
     dbDebugger(result)
 
 
@@ -454,23 +455,22 @@ async function get_item(req, res) {
 }
 
 async function search_item(req, res) {
-    console.log("in function searching items");
-    console.log("req.body = ", req.body)
+    dbDebugger("in function searching items");
+    dbDebugger("req.body = ", req.body)
     timestamp = req.body.timestamp;
-    console.log("time stamp is: ", timestamp);
+    dbDebugger("time stamp is: ", timestamp);
     limit = req.body.limit;
-    console.log("limit is: ", limit);
+    dbDebugger("limit is: ", limit);
     items = Item.find({ timestamp: timestamp });
     if (item) {
-        console.log("found: ", items.length)
+        if (limit == undefined) {
+            return res.send({ status: "OK", items: items })
+        }
         while (items.length > limit) {
             console.log("too many items, poping 1");
             items.pop();
         }
-        return res.send({
-            status: "OK",
-            items: items
-        })
+        return res.send({ status: "OK", items: items })
     }
 
     return res.send({
