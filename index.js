@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
     active: Boolean
 })
 const itemSchema = new mongoose.Schema({
-    uuid: String,
+    id: String,
     username: String,
     property: Object,
     retweeted: Number,
@@ -437,7 +437,7 @@ async function get_item(req, res) {
     console.log("looking for item with id: "+req.params.itemID);
     id = req.params.itemID;
     dbDebugger(req.body);
-    const item = await Item.findOne({ id: id })
+    const item = await Item.findOne({ uuid: id })
     console.log("item found :"+item);
     dbDebugger(item)
     if (item) {
