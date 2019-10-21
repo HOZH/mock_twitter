@@ -14,8 +14,6 @@ const mongoose = require('mongoose')
 const cookieSession = require('cookie-session')
 
 
-
-
 const app = express()
 
 app.use(cookieSession({
@@ -104,7 +102,6 @@ app.get('/', (req, res) => {
     req.session.count = (req.session.count || 0) + 1
     loginDebugger(req.session.count)
 
-
     res.send('ok')
 })
 
@@ -147,7 +144,6 @@ app.post('/logout', (req, res) => {
     res.send({ status: "OK" })
 })
 
-
 app.post('/additem', (req, res) => {
     createItem(req, res)
 })
@@ -160,10 +156,6 @@ app.post('/search', (req, res) => {
     search_item(req, res)
 })
 
-
-
-
-
 const port = process.env.PORT || 3000
 
 app.listen(port, () => {
@@ -172,7 +164,6 @@ app.listen(port, () => {
 })
 
 //validation checkers
-
 function isValidateAdduserRequest(request) {
 
     const schema = {
@@ -202,8 +193,6 @@ async function isUsernameEmailUnique(username, email) {
 async function createUserAndSentEmail(username, email, password, active, req, res) {
 
     const token = uuid.v4()
-
-
 
     const user = new User({
 
@@ -241,8 +230,6 @@ async function createUserAndSentEmail(username, email, password, active, req, re
             // return 0
         }
     });
-
-
 }
 
 async function activateUser(req, res) {
@@ -269,11 +256,7 @@ async function loginUser(req, res) {
     dbDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
 
-
     dbDebugger(user)
-    // dbDebugger('user enabled?',user.active)
-    // dbDebugger("current user enabled = ", user.active)
-
 
     if (user)
 
@@ -286,24 +269,17 @@ async function loginUser(req, res) {
 
         }
 
-
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
     return res.send({ status: "error" })
 
-
 }
-
 
 async function createItem(req, res) {
 
-
-
     if (false === (req.session.username || false)) {
-
         additemDebugger('need to login first')
         return res.send({ status: "error", error: 'just stop asking' })
-
     }
 
     if (!req.body['content']) {
@@ -320,43 +296,6 @@ async function createItem(req, res) {
         return res.send({ status: "error", error: 'wrong childType' })
 
     }
-    // let item
-    // if (childType === "retweet") {
-
-    //     item = new Item({
-
-    //         username: req.session.username,
-    //         property: { likes: 0 },
-    //         retweeted: 0,
-    //         content: req.body.content,
-
-    //     })
-
-    // }
-    // else if (childType === "reply") {
-    //     item = new Item({
-
-    //         username: req.session.username,
-    //         property: { likes: 0 },
-    //         retweeted: 0,
-    //         content: req.body.content,
-
-    //     })
-
-    // }
-    // else {
-
-
-    //     item = new Item({
-
-    //         username: req.session.username,
-    //         property: { likes: 0 },
-    //         retweeted: 0,
-    //         content: req.body.content,
-
-    //     })
-
-    // }
 
     const token = uuid.v4()
 
@@ -368,41 +307,27 @@ async function createItem(req, res) {
         content: req.body.content,
 
     })
-
+    dbDebugger("saving item")
 
     const result = await item.save()
 
-    dbDebugger("printing result:", result)
-
-
-
+    dbDebugger("~~~~~printing result~~~~~~~:", result)
 
     return res.send({ status: 'OK', id: token })
-
-
-
-
-
-
 
 }
 
 async function get_item(req, res) {
-    //console.log("in function get_item");
-    //console.log("looking for item with id: "+req.params.itemID);
     id = req.params.itemID;
     dbDebugger(req.body);
     const item = await Item.findOne({ id: id })
-    //console.log("item found :"+item);
     dbDebugger(item)
     if (item) {
-        //console.log("returning item with OK");
         return res.send({
             status: "OK",
             item: item
         })
     }
-    //console.log("item not found, returning error");
     return res.send({ status: "error", error: "item not found" })
 }
 
