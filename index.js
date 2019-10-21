@@ -78,7 +78,7 @@ app.use(function (req, res, next) {
 
 app.get('/', (req, res) => {
 
-    let token ='1'
+    let token = '1'
     const text = 'key: <' + token + '>'
     let link = "#"
 
@@ -114,7 +114,7 @@ app.post('/adduser', (req, res) => {
     const requestError = isValidateAdduserRequest(req.body)
 
     if (requestError.error) {
-        adduserDebugger('error on fetching user request(contents)',requestError.error.message)
+        adduserDebugger('error on fetching user request(contents)', requestError.error.message)
         return res.status(400).send({ status: "ERROR" })
 
 
@@ -132,7 +132,7 @@ app.post('/adduser', (req, res) => {
 
 
 
-        createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false,req,res)
+        createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
 
 
@@ -152,6 +152,15 @@ app.post('/adduser', (req, res) => {
 
 })
 
+
+app.post('/verify', (req, res) => {
+
+
+    activateUser(req, res)
+
+
+
+})
 
 
 
@@ -187,21 +196,21 @@ function isValidateAdduserRequest(request) {
 
 async function isUsernameEmailUnique(username, email) {
 
-    
+
     const user = await User
         .find()
         .or([{ username: username }, { email: email }])
 
 
 
-    dbDebugger(username,email,"record found:",  user)
+    dbDebugger(username, email, "record found:", user)
 
     return user.length
 }
 
 
 //database operations
-async function createUserAndSentEmail(username, email, password, active,req,res) {
+async function createUserAndSentEmail(username, email, password, active, req, res) {
 
     const token = uuid.v4()
 
@@ -221,7 +230,7 @@ async function createUserAndSentEmail(username, email, password, active,req,res)
     // return result
     const text = 'key: <' + token + '>'
     let link = "#"
-    
+
     link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
     mailOptions = {
         to: req.body.email,
@@ -233,7 +242,7 @@ async function createUserAndSentEmail(username, email, password, active,req,res)
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({status:"ERROR"})
+            return res.send({ status: "ERROR" })
 
         } else {
             return res.send({ status: "OK" })
@@ -243,11 +252,27 @@ async function createUserAndSentEmail(username, email, password, active,req,res)
     });
 
 
+}
 
+async function activateUser(req, res) {
+
+    dbDebugger(req.body)
+    const user = await User.findOneAndUpdate({ uuid: req.body.key, email: req.body.email },
+        {
+            $set: {
+                active: true
+            }
+
+        }, { new: true })
+    dbDebugger(user)
+    if (user)
+        return res.send({ status: "OK" })
+
+    dbDebugger("something went wrong when update active property")
+    return res.state(400).send({ status: "ERROR" })
 
 
 }
-
 
 
 
