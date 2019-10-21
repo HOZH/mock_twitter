@@ -194,7 +194,7 @@ app.post('/additem', (req, res) => {
 
 })
 
-app.get('/item', (req,res)=>{
+app.get('/item/:itemID', (req,res)=>{
     console.log("get item");
     get_item(req,res)
 })
@@ -435,8 +435,10 @@ async function createItem(req, res) {
 }
 
 async function get_item(req, res) {
-    dbDebugger(req.body)
-    const item = await Item.findOne({ id: req.body.id })
+    console.log(req.params.itemID);
+    id = req.params.itemID;
+    dbDebugger(req.body);
+    const item = await Item.findOne({ id: id })
     dbDebugger(item)
     if (item) {
         return res.send({ 
@@ -447,5 +449,8 @@ async function get_item(req, res) {
     return res.send({ status: "error", error: "item not found" })
 }
 
+async function search_item(req,res){
+
+}
 
 
