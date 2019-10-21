@@ -406,7 +406,7 @@ async function createItem(req, res) {
     const token = uuid.v4()
 
     const item = new Item({
-        uuid: token,
+        id: token,
         username: req.session.username,
         property: { likes: 0 },
         retweeted: 0,
@@ -437,7 +437,7 @@ async function get_item(req, res) {
     console.log("looking for item with id: "+req.params.itemID);
     id = req.params.itemID;
     dbDebugger(req.body);
-    const item = await Item.findOne({ uuid: id })
+    const item = await Item.findOne({ id: id })
     console.log("item found :"+item);
     dbDebugger(item)
     if (item) {
