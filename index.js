@@ -189,13 +189,11 @@ app.post('/logout', (req, res) => {
 
 
 app.post('/additem', (req, res) => {
-    console.log("add item");
     createItem(req, res)
 
 })
 
 app.get('/item/:itemID', (req,res)=>{
-    console.log("get item");
     get_item(req,res)
 })
 
@@ -435,17 +433,21 @@ async function createItem(req, res) {
 }
 
 async function get_item(req, res) {
-    console.log(req.params.itemID);
+    console.log("in function get_item");
+    console.log("looking for item with id: "+req.params.itemID);
     id = req.params.itemID;
     dbDebugger(req.body);
     const item = await Item.findOne({ id: id })
+    console.log("item found :"+item);
     dbDebugger(item)
     if (item) {
+        console.log("returning item with OK");
         return res.send({ 
             status: "OK",
             item: item   
         })
     }
+    console.log("item not found, returning error");
     return res.send({ status: "error", error: "item not found" })
 }
 
