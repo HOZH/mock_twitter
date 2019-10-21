@@ -189,13 +189,13 @@ app.post('/logout', (req, res) => {
 
 
 app.post('/additem', (req, res) => {
-
-
+    console.log("add item");
     createItem(req, res)
 
 })
 
 app.get('/item', (req,res)=>{
+    console.log("get item");
     get_item(req,res)
 })
 
