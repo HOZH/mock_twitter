@@ -105,7 +105,7 @@ app.get('/', (req, res) => {
     res.render('index');
 })
 
-app.get('/adduser',(req,res)=>{
+app.get('/adduser', (req, res) => {
     res.render("addUser");
 })
 app.post('/adduser', (req, res) => {
@@ -116,7 +116,9 @@ app.post('/adduser', (req, res) => {
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send({ status: "error" })
+        let obj = { status: "error" };
+        return res.render("addUser", obj);
+        //return res.send({ status: "error" })
     }
 
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
@@ -124,13 +126,14 @@ app.post('/adduser', (req, res) => {
         const isUnique = value === 0
         adduserDebugger('username and email are both unique =', isUnique)
 
-        if (!isUnique)
-            return res.send({ status: "error" })
+        if (!isUnique) {
+            let obj = { status: "error" };
+            return res.render("addUser", obj);
+            //return res.send({ status: "error" })
+        }
 
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
-
     })
-
 })
 
 app.get('/verify', (req, res) => {
@@ -140,7 +143,7 @@ app.post('/verify', (req, res) => {
     activateUser(req, res)
 })
 
-app.get('/login',(req,res)=>{
+app.get('/login', (req, res) => {
     res.render("login");
 })
 app.post('/login', (req, res) => {
@@ -352,7 +355,7 @@ async function get_item(req, res) {
 async function search_item(req, res) {
     dbDebugger("in function searching items");
     dbDebugger("req.body = ", req.body)
-    timestamp = (req.body.timestamp || Date.now() / 1000 );
+    timestamp = (req.body.timestamp || Date.now() / 1000);
     dbDebugger("time stamp is: ", timestamp);
     limit = (req.body.limit || 25);
     dbDebugger("limit is: ", limit);
@@ -383,7 +386,7 @@ async function search_item(req, res) {
         error: "items not found"
     })
 
-    
+
 }
 
 
