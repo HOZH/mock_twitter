@@ -42,7 +42,7 @@ if (app.get('env') === 'development') {
 
 
 mongoose
-    .connect('mongodb://127.0.0.1/hong_db').then(() => { dbDebugger('Connected to MongoDB...') })
+    .connect('mongodb://127.0.0.1/my_db').then(() => { dbDebugger('Connected to MongoDB...') })
     .catch(err => dbDebugger('could not connect to the mongodb... ', err))
 
 const userSchema = new mongoose.Schema({
@@ -59,7 +59,7 @@ const itemSchema = new mongoose.Schema({
     property: Object,
     retweeted: Number,
     content: Object,
-    timestamp: { type: Number, default: Date.now() * 1000 }
+    timestamp: { type: Number, default: Date.now() / 1000 }
 })
 
 const User = mongoose.model('User', userSchema)
@@ -334,22 +334,32 @@ async function get_item(req, res) {
 async function search_item(req, res) {
     dbDebugger("in function searching items");
     dbDebugger("req.body = ", req.body)
-    timestamp = req.body.timestamp;
+    timestamp = (req.body.timestamp || Date.now() / 1000 );
     dbDebugger("time stamp is: ", timestamp);
-    limit = req.body.limit;
+    limit = (req.body.limit || 25);
     dbDebugger("limit is: ", limit);
     const items = await Item.find({})
+    dbDebugger("for loop: ");
+    let result = []
     if (items) {
-        if (limit == undefined) {
-            return res.send({ status: "OK", items: items })
+        for (let i = 0; i < items.length; i++) {
+            dbDebugger("items : ", i, "tsp: ", items[i].timestamp)
+            if (items[i].timestamp <= timestamp) {
+                dbDebugger("pushing item ", i);
+                dbDebugger(items[i]);
+                result.push(items[i])
+            }
         }
-        while (items.length > limit) {
-            console.log("too many items, poping 1");
-            items.pop();
+        while (result.length > limit) {
+            dbDebugger("too many items, poping 1");
+            result.pop();
         }
-        return res.send({ status: "OK", items: items })
+        dbDebugger("returning items with ok")
+        dbDebugger("result: ", result)
+        return res.send({ status: "OK", items: result })
     }
 
+    dbDebugger("items not found, error")
     return res.send({
         status: "error",
         error: "items not found"
