@@ -1,0 +1,10 @@
+<% include partials/header %>
+<form method="POST" action="/adduser">
+    <label>Account Registration</label><br>
+    <input type="text" name="username" placeholder="User Name"><br>
+    <input type="text" name="password" placeholder="Password"><br>
+    <input type="text" name="email" placeholder="Email"><br>
+    <input type="submit" value="Register" />
+</form>
+Already have an account? <a href="/login">Login here</a>
+<% include partials/footer %>

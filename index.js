@@ -102,9 +102,12 @@ app.get('/', (req, res) => {
     req.session.count = (req.session.count || 0) + 1
     loginDebugger(req.session.count)
 
-    res.send('ok')
+    res.render('index');
 })
 
+app.get('/adduser',(req,res)=>{
+    res.render("addUser");
+})
 app.post('/adduser', (req, res) => {
 
     adduserDebugger(req.body)
@@ -130,20 +133,32 @@ app.post('/adduser', (req, res) => {
 
 })
 
-
+app.get('/verify', (req, res) => {
+    res.render('verify');
+})
 app.post('/verify', (req, res) => {
     activateUser(req, res)
 })
 
+app.get('/login',(req,res)=>{
+    res.render("login");
+})
 app.post('/login', (req, res) => {
-    loginUser(req, res)
+    loginUser(req, res);
 })
 
+
+app.get('/logout', (req, res) => {
+    res.render("logout");
+})
 app.post('/logout', (req, res) => {
     req.session = null
     res.send({ status: "OK" })
 })
 
+app.get('/additem', (req, res) => {
+    res.render("addItem");
+})
 app.post('/additem', (req, res) => {
     createItem(req, res)
 })
@@ -152,6 +167,9 @@ app.get('/item/:itemID', (req, res) => {
     get_item(req, res)
 })
 
+app.get('/search', (req, res) => {
+    res.render("search");
+})
 app.post('/search', (req, res) => {
     search_item(req, res)
 })
