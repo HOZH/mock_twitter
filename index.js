@@ -6,7 +6,7 @@ const loginDebugger = require('debug')('app:login')
 const dbDebugger = require('debug')('app:db')
 const additemDebugger = require('debug')('app:additem')
 const morgan = require('morgan')
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer')
 const uuid = require('uuid');
 const Joi = require('joi')
 const path = require('path')
@@ -107,13 +107,13 @@ app.post('/adduser', (req, res) => {
     const requestError = isValidateAdduserRequest(req.body)
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send("addUser", { status: "error" })
+        return res.render("addUser", { status: "error" })
     }
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
         const isUnique = value === 0
         adduserDebugger('username and email are both unique =', isUnique)
         if (!isUnique) {
-            return res.send("addUser", { status: "error" })
+            return res.render("addUser", { status: "error" })
         }
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
     })
@@ -261,14 +261,12 @@ async function createItem(req, res) {
 
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first');
-        alert('need to login first');
         return res.render("addItem", { status: "error", error: 'just stop asking' })
     }
 
     if (!req.body['content']) {
 
         additemDebugger('empty content')
-        alert("empty content");
         return res.render("addItem", { status: "error", error: 'empty content' })
 
     }
@@ -277,7 +275,6 @@ async function createItem(req, res) {
 
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
         additemDebugger('wrong child type')
-        alert('wrong child type')
         return res.render("addItem", { status: "error", error: 'wrong childType' })
 
     }
@@ -345,7 +342,6 @@ async function search_item(req, res) {
     }
 
     dbDebugger("items not found, error")
-    alert("items not found")
     return res.render("search", {
         status: "error",
         error: "items not found"
