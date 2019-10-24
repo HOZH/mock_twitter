@@ -94,16 +94,6 @@ app.use(function (req, res, next) {
 });
 
 
-app.get('/', (req, res) => {
-
-    print(res.session)
-    loginDebugger(req.session, "session")
-
-    req.session.count = (req.session.count || 0) + 1
-    loginDebugger(req.session.count)
-
-    res.send('ok')
-})
 
 app.post('/adduser', (req, res) => {
 
@@ -253,7 +243,7 @@ async function activateUser(req, res) {
 
 async function loginUser(req, res) {
 
-    dbDebugger(req.body)
+    // dbDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
 
     dbDebugger(user)
@@ -265,7 +255,10 @@ async function loginUser(req, res) {
             loginDebugger("log in performed")
             req.session.isLogin = true
             req.session.username = req.body.username
+            // if (!res.body.isGet)
             return res.send({ status: "OK" })
+            // else
+            // return res.render({})
 
         }
 
@@ -367,5 +360,32 @@ async function search_item(req, res) {
 
     
 }
+
+
+app.get('/', (req, res) => {
+
+    print(res.session)
+    loginDebugger(req.session, "session")
+
+    req.session.count = (req.session.count || 0) + 1
+    loginDebugger(req.session.count)
+
+    res.send('ok')
+})
+
+
+app.get('/login', (req, res) => {
+
+
+   return  res.render('login')
+
+    // print(res.session)
+    // loginDebugger(req.session, "session")
+
+    // req.session.count = (req.session.count || 0) + 1
+    // loginDebugger(req.session.count)
+
+    // res.send('ok')
+})
 
 
