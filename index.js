@@ -122,8 +122,13 @@ app.post('/adduser', (req, res) => {
 app.get('/verify', (req, res) => {
     res.render('verify');
 })
+
 app.post('/verify', (req, res) => {
     activateUser(req, res)
+})
+
+app.get('/verify/:email/:key', (req, res) => {
+    activateUserII(req, res)
 })
 
 app.get('/login', (req, res) => {
@@ -204,7 +209,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     mailOptions = {
         to: req.body.email,
         subject: "mock_twitter Please confirm your Email account",
-        html: text
+        html: "Hello,<br> Please Click on the link to verify your email. <br><a href=" + link + "><" + token + "></a>"
     }
     smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
@@ -212,13 +217,15 @@ async function createUserAndSentEmail(username, email, password, active, req, re
             return res.send("addUser", { status: "error" })
 
         } else {
-            return res.send("verify", { status: "OK" })
+            // return res.send("verify", { status: "OK" })
+            return res.render("verify")
         }
     });
+
+
 }
 
 async function activateUser(req, res) {
-
     dbDebugger(req.body)
     const user = await User.findOneAndUpdate({ uuid: req.body.key, email: req.body.email },
         {
@@ -235,29 +242,36 @@ async function activateUser(req, res) {
     return res.send("verify", { status: "error" });
 }
 
+async function activateUserII(req, res) {
+    dbDebugger(req.body)
+    const user = await User.findOneAndUpdate({ uuid: req.params.key, email: req.params.email },
+        {
+            $set: {
+                active: true
+            }
+
+        }, { new: true })
+    dbDebugger(user)
+    if (user)
+        return res.render("login", { status: "OK" });
+
+    dbDebugger("something went wrong when update active property")
+    return res.send("verify", { status: "error" });
+}
+
 async function loginUser(req, res) {
-
-
-    print('something went wrong')
 
     // dbDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
-
     // dbDebugger(user)
     print(user)
-
-    res.send({"error":"123"})
-
     if (user)
-
         if (user.active) {
-
             loginDebugger("log in performed")
             req.session.isLogin = true
             req.session.username = req.body.username
             return res.render("addItem", { status: "OK" })
         }
-
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
     return res.render("login", { status: "error" });
@@ -267,26 +281,21 @@ async function createItem(req, res) {
 
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first');
-        return res.render("addItem", { status: "error", error: 'just stop asking' })
+        // return res.render("addItem", { status: "error", error: 'just stop asking' })
+        return res.redirect('/login')
     }
 
     if (!req.body['content']) {
-
         additemDebugger('empty content')
-        return res.render("addItem", { status: "error", error: 'empty content' })
-
+        // return res.render("addItem", { status: "error", error: 'empty content' })
+        return res.send(`alert("empty content")`);
     }
-
     const childType = req.body.childType
-
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
         additemDebugger('wrong child type')
         return res.render("addItem", { status: "error", error: 'wrong childType' })
-
     }
-
     const token = uuid.v4()
-
     const item = new Item({
         id: token,
         username: req.session.username,
@@ -296,13 +305,9 @@ async function createItem(req, res) {
 
     })
     dbDebugger("saving item")
-
     const result = await item.save()
-
     dbDebugger("~~~~~printing result~~~~~~~:", result)
-
-    return res.render("search", { status: 'OK', id: token })
-
+    return res.render("search", { status: 'OK', post_id: token })
 }
 
 async function get_item(req, res) {

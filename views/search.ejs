@@ -1,5 +1,20 @@
 <% include partials/header %>
-<form method="POST" action="/login">
+<% if(<%=post_id%>){ %>
+<h1><%=post_id%></h1>
+<% } %>
+<form method="POST" action="/additem">
+  <label>Post a twitter</label><br>
+  <input type="text" name="content" placeholder="Write something..."><br>
+  <input type="text" name="child type" placeholder="Retweet or reply"><br>
+  <input type="submit" value="Post" />
+</form>
+<form method="GET" action="/item/:itemID">
+  <label>Get Post</label><br>
+  <input type="text" name="timestamp" placeholder="timestamp"><br>
+  <input type="text" name="limit" placeholder="25"><br>
+  <input type="submit" value="Search" />
+</form>
+<form method="POST" action="/search">
   <label>Item Search</label><br>
   <input type="text" name="timestamp" placeholder="timestamp"><br>
   <input type="text" name="limit" placeholder="25"><br>
