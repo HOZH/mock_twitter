@@ -140,6 +140,7 @@ app.post('/login', (req, res) => {
 
 
 app.get('/logout', (req, res) => {
+    req.session = null
     res.render("logout");
 })
 app.post('/logout', (req, res) => {
@@ -147,9 +148,6 @@ app.post('/logout', (req, res) => {
     res.send({ status: "OK" })
 })
 
-app.get('/additem', (req, res) => {
-    res.render("addItem");
-})
 app.post('/additem', (req, res) => {
     createItem(req, res)
 })
@@ -165,7 +163,7 @@ app.post('/search', (req, res) => {
     search_item(req, res)
 })
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 80
 
 app.listen(port, () => {
     console.log(process.env.PORT)
@@ -209,7 +207,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     mailOptions = {
         to: req.body.email,
         subject: "mock_twitter Please confirm your Email account",
-        html: "Hello,<br> Please Click on the link to verify your email. <br><a href=" + link + "><" + token + "></a>"
+        html: "Hello,<br> Please Click on the link to verify your email xxxx. <br><a href=" + link + "><" + token + "></a>"
     }
     smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
@@ -260,7 +258,6 @@ async function activateUserII(req, res) {
 }
 
 async function loginUser(req, res) {
-
     // dbDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
     // dbDebugger(user)
@@ -270,7 +267,7 @@ async function loginUser(req, res) {
             loginDebugger("log in performed")
             req.session.isLogin = true
             req.session.username = req.body.username
-            return res.render("addItem", { status: "OK" })
+            return res.render("search", { status: "OK", id: "", item: "" })
         }
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
@@ -293,7 +290,9 @@ async function createItem(req, res) {
     const childType = req.body.childType
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
         additemDebugger('wrong child type')
-        return res.render("addItem", { status: "error", error: 'wrong childType' })
+        // return res.render("addItem", { status: "error", error: 'wrong childType' })
+        console.log("111111111111111")
+        return res.send({ status: "error" })
     }
     const token = uuid.v4()
     const item = new Item({
@@ -307,19 +306,22 @@ async function createItem(req, res) {
     dbDebugger("saving item")
     const result = await item.save()
     dbDebugger("~~~~~printing result~~~~~~~:", result)
-    return res.render("search", { status: 'OK', post_id: token })
+    return res.render("search", { status: 'OK', id: token, item: "" })
 }
 
 async function get_item(req, res) {
     id = req.params.itemID;
+    console.log("iddddddddddddd", id)
     dbDebugger(req.body);
     const item = await Item.findOne({ id: id })
     dbDebugger(item)
     if (item) {
-        return res.send({
-            status: "OK",
-            item: item
-        })
+        // return res.send({
+        //     status: "OK",
+        //     item: item
+        // })
+
+        return res.render("search", { status: 'OK', id: "", item: item })
     }
     return res.send({ status: "error", error: "item not found" })
 }
@@ -355,7 +357,9 @@ async function search_item(req, res) {
     dbDebugger("items not found, error")
     return res.render("search", {
         status: "error",
-        error: "items not found"
+        error: "items not found",
+        id: "",
+        item: ""
     })
 
 
