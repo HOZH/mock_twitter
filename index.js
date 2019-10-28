@@ -1,10 +1,12 @@
-//imports
 const express = require('express')
 const print = require('debug')('app:print')
 const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
 const dbDebugger = require('debug')('app:db')
+const verifyDebugger = require('debug')('app:verify')
+const getitemDebugger = require('debug')('app:getitem')
 const additemDebugger = require('debug')('app:additem')
+const searchitemDebugger = require('debug')('app:searchitem')
 const morgan = require('morgan')
 const nodemailer = require('nodemailer');
 const uuid = require('uuid');
@@ -145,15 +147,15 @@ app.post('/logout', (req, res) => {
 })
 
 app.post('/additem', (req, res) => {
-    createItem(req, res)
+    addItem(req, res)
 })
 
 app.get('/item/:itemID', (req, res) => {
-    get_item(req, res)
+    getItem(req, res)
 })
 
 app.post('/search', (req, res) => {
-    search_item(req, res)
+    searchItem(req, res)
 })
 
 const port = process.env.PORT || 3000
@@ -183,7 +185,7 @@ async function isUsernameEmailUnique(username, email) {
         .find()
         .or([{ username: username }, { email: email }])
 
-    dbDebugger(username, email, "record found:", user)
+    adduserDebugger(username, email, "record found:", user)
 
     return user.length
 }
@@ -205,7 +207,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     })
     const result = await user.save()
 
-    dbDebugger(result)
+    adduserDebugger(result)
 
     // return result
     const text = 'key: <' + token + '>'
@@ -234,7 +236,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
 
 async function activateUser(req, res) {
 
-    dbDebugger(req.body)
+    verifyDebugger(req.body)
     const user = await User.findOneAndUpdate({ uuid: req.body.key, email: req.body.email },
         {
             $set: {
@@ -242,21 +244,21 @@ async function activateUser(req, res) {
             }
 
         }, { new: true })
-    dbDebugger(user)
+    verifyDebugger(user)
     if (user)
         return res.send({ status: "OK" })
 
-    dbDebugger("something went wrong when update active property")
+    verifyDebugger("something went wrong when update active property")
     return res.send({ status: "error" })
 
 }
 
 async function loginUser(req, res) {
 
-    dbDebugger(req.body)
+    loginDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
 
-    dbDebugger(user)
+    loginDebugger(user)
 
     if (user)
 
@@ -275,7 +277,7 @@ async function loginUser(req, res) {
 
 }
 
-async function createItem(req, res) {
+async function addItem(req, res) {
 
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
@@ -307,21 +309,21 @@ async function createItem(req, res) {
         content: req.body.content,
 
     })
-    dbDebugger("saving item")
+    additemDebugger("saving item")
 
     const result = await item.save()
 
-    dbDebugger("~~~~~printing result~~~~~~~:", result)
+    additemDebugger("~~~~~printing result~~~~~~~:", result)
 
     return res.send({ status: 'OK', id: token })
 
 }
 
-async function get_item(req, res) {
+async function getItem(req, res) {
     id = req.params.itemID;
-    dbDebugger(req.body);
+    getitemDebugger(req.body);
     const item = await Item.findOne({ id: id })
-    dbDebugger(item)
+    getitemDebugger(item)
     if (item) {
         return res.send({
             status: "OK",
@@ -331,35 +333,28 @@ async function get_item(req, res) {
     return res.send({ status: "error", error: "item not found" })
 }
 
-async function search_item(req, res) {
-    dbDebugger("in function searching items");
-    dbDebugger("req.body = ", req.body)
+async function searchItem(req, res) {
+    searchitemDebugger("in function searching items");
+    searchitemDebugger("req.body = ", req.body)
     timestamp = (req.body.timestamp || Date.now() / 1000);
-    dbDebugger("time stamp is: ", timestamp);
+    searchitemDebugger("time stamp is: ", timestamp);
     limit = (req.body.limit || 25);
-    dbDebugger("limit is: ", limit);
-    const items = await Item.find({})
-    dbDebugger("for loop: ");
+    searchitemDebugger("limit is: ", limit);
+    const items = await Item.find({ timestamp: { $lte: timestamp } }).limit(limit)
     let result = []
     if (items) {
         for (let i = 0; i < items.length; i++) {
-            dbDebugger("items : ", i, "tsp: ", items[i].timestamp)
-            if (items[i].timestamp <= timestamp) {
-                dbDebugger("pushing item ", i);
-                dbDebugger(items[i]);
-                result.push(items[i])
-            }
+            searchitemDebugger("items : ", i, "tsp: ", items[i].timestamp)
+
+            result.push(items[i])
         }
-        while (result.length > limit) {
-            dbDebugger("too many items, poping 1");
-            result.pop();
-        }
-        dbDebugger("returning items with ok")
-        dbDebugger("result: ", result)
+
+        searchitemDebugger("returning items with ok")
+        searchitemDebugger("result: ", result)
         return res.send({ status: "OK", items: result })
     }
 
-    dbDebugger("items not found, error")
+    searchitemDebugger("items not found, error")
     return res.send({
         status: "error",
         error: "items not found"
