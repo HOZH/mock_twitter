@@ -8,6 +8,7 @@ const cookieSession = require('cookie-session')
 
 const userRouter = require('./routers/userRouter')
 const itemRouter = require('./routers/itemRouter')
+const getRouter = require('./routers/getRouter')
 
 const app = express()
 
@@ -22,7 +23,7 @@ app.use(cookieSession({
 //setup res.body
 app.use(express.json())
 //key=value&key=value
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 //setup path prefix for static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
@@ -56,6 +57,7 @@ if (app.get('env') === 'development') {
 
 app.use(userRouter)
 app.use(itemRouter)
+app.use(getRouter)
 
 
 app.get('/', (req, res) => {
@@ -65,7 +67,10 @@ app.get('/', (req, res) => {
     req.session.count = (req.session.count || 0) + 1
     print(req.session.count)
 
-    res.send('ok')
+    // res.send('ok')
+    dataUrl = "https://i.ibb.co/y0zr95x/1.png";
+    return res.send(`<img src=${dataUrl}>`);
+
 })
 
 

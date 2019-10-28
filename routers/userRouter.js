@@ -38,18 +38,16 @@ router.route('/login').post((req, res) => {
 
 router.route('/logout').post((req, res) => {
     req.session = null
-    res.send({status: "OK"})
+    res.send({ status: "OK" })
 })
 
 
 function isValidateAdduserRequest(req) {
 
     const schema = {
-
         username: Joi.string().required(),
         email: Joi.string().email().required(),
         password: Joi.string().required()
-
     }
 
     return Joi.validate(req.body, schema)
@@ -57,9 +55,7 @@ function isValidateAdduserRequest(req) {
 
 async function isUsernameEmailUnique(username, email) {
 
-    const user = await User
-        .find()
-        .or([{username: username}, {email: email}])
+    const user = await User.find().or([{ username: username }, { email: email }])
 
     adduserDebugger(username, email, "record found:", user)
 
@@ -71,13 +67,11 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     const token = uuid.v4()
 
     const user = new User({
-
         username: username,
         email: email,
         password: password,
         uuid: token,
         active: active
-
     })
     const result = await user.save()
 
@@ -88,7 +82,9 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     let link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
 
 
-    let html = text + "   Hello, Please Click on the link to verify your email. <a href=" + link + ">" + text + "</a>"
+    let html = "Hello,<br> Please Click on the link to verify your email. <br><a href=" + link + "><" + token + "></a>"
+    //  text + "   Hello, Please Click on the link to verify your email. <a href=" + link + ">" + text + "</a>"
+    //  "Hello,<br> Please Click on the link to verify your email. <br><a href=" + link + "><" + token + "></a>"
 
     mailOptions = {
         to: req.body.email,
@@ -100,11 +96,12 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({status: "error"})
+            return res.send({ status: "error" })
 
         } else {
-            return res.send({status: "OK"})
 
+            return res.render("verify")
+            // return res.send({ status: "OK" })
             // return 0
         }
     });
@@ -115,7 +112,7 @@ function addUser(req, res) {
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send({status: "error"})
+        return res.send({ status: "error" })
     }
 
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
@@ -124,7 +121,7 @@ function addUser(req, res) {
         adduserDebugger('username and email are both unique =', isUnique)
 
         if (!isUnique)
-            return res.send({status: "error"})
+            return res.send({ status: "error" })
 
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
@@ -134,26 +131,26 @@ function addUser(req, res) {
 async function activateUser(req, res) {
 
     verifyDebugger(req.body)
-    const user = await User.findOneAndUpdate({uuid: {$in: ['abracadabra', req.body.key]}, email: req.body.email},
+    const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.body.key] }, email: req.body.email },
         {
             $set: {
                 active: true
             }
 
-        }, {new: true})
+        }, { new: true })
     verifyDebugger(user)
     if (user)
-        return res.send({status: "OK"})
+        return res.render("login", { status: "OK" });
 
     verifyDebugger("something went wrong when update active property")
-    return res.send({status: "error"})
+    return res.render("verify", { status: "error" });
 
 }
 
 async function loginUser(req, res) {
 
     loginDebugger(req.body)
-    const user = await User.findOne({username: req.body.username, password: req.body.password})
+    const user = await User.findOne({ username: req.body.username, password: req.body.password })
 
     loginDebugger(user)
 
@@ -164,13 +161,14 @@ async function loginUser(req, res) {
             loginDebugger("log in performed")
             req.session.isLogin = true
             req.session.username = req.body.username
-            return res.send({status: "OK"})
+            return res.render("search", { status: "OK", item: "" })
 
         }
 
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
-    return res.send({status: "error"})
+    // return res.send({ status: "error" })
+    return res.render("login", { status: "error" });
 
 }
 

@@ -1,33 +1,86 @@
 <% include partials/header %>
-<% if(id){ %>
-<h1>Item ID : <%= id %></h1>
-<% } %>
-<form method="POST" action="/additem">
-    <label>Add item</label><br>
-    <input type="text" name="content" placeholder="Write something..."><br>
-    <input type="text" name="childType" placeholder="retweet or reply"><br>
-    <input type="submit" value="Post"/>
-</form>
-<% if(item){ %>
-<h1>Item : <%= item %></h1>
-<% } %>
-<form method="GET" onsubmit="get_action(this);">
-    <label>Get item</label><br>
-    <input type=" text" id="id" name="id" placeholder="item id"><br>
-    <input type="submit" value="Search"/>
-</form>
+<p id="post">post: Not Thing</p>
+<label>Add item</label><br>
+<input type="text" id="content" name="content" placeholder="Write something..."><br>
+<input type="text" id="childType" name="childType" placeholder="retweet or reply"><br>
+<button id="addItem">Post</button>
+
+<p id="item">item: Not Thing</p>
+<label>Get item</label><br>
+<input type=" text" id="id" name="id" placeholder="item id"><br>
+<button id="getItem">Search</button>
+
+
 <form method="POST" action="/search">
     <label>Item Search</label><br>
     <input type="text" name="timestamp" placeholder="timestamp"><br>
     <input type="text" name="limit" placeholder="25"><br>
-    <input type="submit" value="Search"/>
+    <input type="submit" value="Search" />
 </form>
 
 
 <form method="GET" action="/logout">
-    <input type="submit" value="logout"/>
+    <input type="submit" value="logout" />
 </form>
-<script type="text/javascript">
+<script>
+    $(function () {
+        $("#addItem").click(function () {
+            addItem_post();
+        });
+        $("#getItem").click(function () {
+            getItem_get();
+        });
+
+        function addItem_post() {
+            let content = document.getElementById("content").value;
+            let childType = document.getElementById("childType").value;
+
+            data = JSON.stringify({ content: content, childType: childType });
+            console.log(data);
+            $.ajax({
+                url: "http://130.245.169.40/additem",
+                type: "POST",
+                data: data,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    console.log(response);
+                    if (response.id)
+                        post.innerHTML = "id： " + response.id;
+                    if (response.status == "error") {
+                        alert("error: " + response.error);
+                    }
+                },
+                error: function (error) {
+                    alert("error");
+                }
+            });
+        };
+        function getItem_get() {
+            let id = document.getElementById("id").value;
+            console.log(id);
+            $.ajax({
+                url: "http://130.245.169.40/item/" + id,
+                type: "GET",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    console.log(response);
+                    if (response.item) {
+                        item.innerHTML = "id: " + response.item.id + ",content: " +
+                            response.item.content + ", timestamp: " + response.item.timestamp;
+                    }
+                    if (response.status == "error") {
+                        alert("error: " + response.error);
+                    }
+                },
+                error: function (error) {
+                    alert("error");
+                }
+            });
+        };
+    });
+
     function get_action(form) {
         form.action = 'item/' + document.getElementById("id").value;
     }
