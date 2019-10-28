@@ -24,18 +24,17 @@ router.route('/search').post((req, res) => {
 })
 
 
-
 async function addItem(req, res) {
 
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
-        return res.send({ status: "error", error: 'just stop asking' })
+        return res.send({status: "error", error: 'just stop asking'})
     }
 
     if (!req.body['content']) {
 
         additemDebugger('empty content')
-        return res.send({ status: "error", error: 'empty content' })
+        return res.send({status: "error", error: 'empty content'})
 
     }
 
@@ -43,7 +42,7 @@ async function addItem(req, res) {
 
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
         additemDebugger('wrong child type')
-        return res.send({ status: "error", error: 'wrong childType' })
+        return res.send({status: "error", error: 'wrong childType'})
 
     }
 
@@ -52,7 +51,7 @@ async function addItem(req, res) {
     const item = new Item({
         id: token,
         username: req.session.username,
-        property: { likes: 0 },
+        property: {likes: 0},
         retweeted: 0,
         content: req.body.content,
 
@@ -63,14 +62,14 @@ async function addItem(req, res) {
 
     additemDebugger("~~~~~printing result~~~~~~~:", result)
 
-    return res.send({ status: 'OK', id: token })
+    return res.send({status: 'OK', id: token})
 
 }
 
 async function getItem(req, res) {
     id = req.params.itemID;
     getitemDebugger(req.body);
-    const item = await Item.findOne({ id: id })
+    const item = await Item.findOne({id: id})
     getitemDebugger(item)
     if (item) {
         return res.send({
@@ -78,7 +77,7 @@ async function getItem(req, res) {
             item: item
         })
     }
-    return res.send({ status: "error", error: "item not found" })
+    return res.send({status: "error", error: "item not found"})
 }
 
 async function searchItem(req, res) {
@@ -93,7 +92,7 @@ async function searchItem(req, res) {
 
     searchitemDebugger("limit is: ", limit);
 
-    const items = await Item.find({ timestamp: { $lte: timestamp } }).limit(limit)
+    const items = await Item.find({timestamp: {$lte: timestamp}}).limit(limit)
     let result = []
     if (items) {
         for (let i = 0; i < items.length; i++) {
@@ -104,7 +103,7 @@ async function searchItem(req, res) {
 
         searchitemDebugger("returning items with ok")
         searchitemDebugger("result: ", result)
-        return res.send({ status: "OK", items: result })
+        return res.send({status: "OK", items: result})
     }
 
     searchitemDebugger("items not found, error")

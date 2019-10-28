@@ -1,16 +1,13 @@
+
 const express = require('express')
+
 const print = require('debug')('app:print')
-
-
 const morgan = require('morgan')
 const path = require('path')
 const cookieSession = require('cookie-session')
 
 const userRouter = require('./routers/userRouter')
 const itemRouter = require('./routers/itemRouter')
-
-
-
 
 const app = express()
 
@@ -25,7 +22,7 @@ app.use(cookieSession({
 //setup res.body
 app.use(express.json())
 //key=value&key=value
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({extended: true}))
 //setup path prefix for static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
@@ -61,8 +58,6 @@ app.use(userRouter)
 app.use(itemRouter)
 
 
-
-
 app.get('/', (req, res) => {
 
     print(req.session, "session")
@@ -72,8 +67,6 @@ app.get('/', (req, res) => {
 
     res.send('ok')
 })
-
-
 
 
 const port = process.env.PORT || 3000
