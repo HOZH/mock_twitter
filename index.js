@@ -58,9 +58,7 @@ if (app.get('env') === 'development') {
 
 
 app.use(userRouter)
-
-const db = require('./db')
-const Item = db.Item
+app.use(itemRouter)
 
 
 

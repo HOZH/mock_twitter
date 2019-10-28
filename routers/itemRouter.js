@@ -11,15 +11,15 @@ const uuid = require('uuid');
 
 const Item = db.Item
 
-router.post('/additem', (req, res) => {
+router.route('/additem').post((req, res) => {
     addItem(req, res)
 })
 
-router.get('/item/:itemID', (req, res) => {
+router.route('/item/:itemID').get((req, res) => {
     getItem(req, res)
 })
 
-router.post('/search', (req, res) => {
+router.route('/search').post((req, res) => {
     searchItem(req, res)
 })
 
@@ -82,12 +82,17 @@ async function getItem(req, res) {
 }
 
 async function searchItem(req, res) {
+
     searchitemDebugger("in function searching items");
     searchitemDebugger("req.body = ", req.body)
+
     timestamp = (req.body.timestamp || Date.now() / 1000);
+
     searchitemDebugger("time stamp is: ", timestamp);
     limit = (req.body.limit || 25);
+
     searchitemDebugger("limit is: ", limit);
+
     const items = await Item.find({ timestamp: { $lte: timestamp } }).limit(limit)
     let result = []
     if (items) {
