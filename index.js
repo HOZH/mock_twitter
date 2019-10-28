@@ -2,7 +2,6 @@ const express = require('express')
 const print = require('debug')('app:print')
 const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
-const dbDebugger = require('debug')('app:db')
 const verifyDebugger = require('debug')('app:verify')
 const getitemDebugger = require('debug')('app:getitem')
 const additemDebugger = require('debug')('app:additem')
@@ -12,8 +11,9 @@ const nodemailer = require('nodemailer');
 const uuid = require('uuid');
 const Joi = require('joi')
 const path = require('path')
-const mongoose = require('mongoose')
 const cookieSession = require('cookie-session')
+
+
 
 
 const app = express()
@@ -32,49 +32,6 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 //setup path prefix for static files
 app.use(express.static(path.join(__dirname, 'public')));
-//setup view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-if (app.get('env') === 'development') {
-    //request logger
-    app.use(morgan('tiny'))
-    print('morgan is enabled');
-}
-
-
-mongoose
-    .connect('mongodb://127.0.0.1/my_db').then(() => { dbDebugger('Connected to MongoDB...') })
-    .catch(err => dbDebugger('could not connect to the mongodb... ', err))
-
-const userSchema = new mongoose.Schema({
-
-    username: String,
-    email: String,
-    uuid: String,
-    password: String,
-    active: Boolean
-})
-const itemSchema = new mongoose.Schema({
-    id: String,
-    username: String,
-    property: Object,
-    retweeted: Number,
-    content: Object,
-    timestamp: { type: Number, default: Date.now() / 1000 }
-})
-
-const User = mongoose.model('User', userSchema)
-const Item = mongoose.model('Item', itemSchema)
-
-const smtpTransport = nodemailer.createTransport(({
-    port: 25,
-    secure: false,
-    tls: {
-        rejectUnauthorized: false
-    }
-}));
-
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -91,9 +48,32 @@ app.use(function (req, res, next) {
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
     res.setHeader("Access-Control-Allow-Credentials", true);
-    // Pass to next layer of middleware  
     next();
 });
+//setup view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+if (app.get('env') === 'development') {
+    //request logger
+    app.use(morgan('tiny'))
+    print('morgan is enabled');
+}
+
+const db = require('./db')
+const User = db.User
+const Item = db.Item
+
+
+const smtpTransport = nodemailer.createTransport(({
+    port: 25,
+    secure: false,
+    tls: {
+        rejectUnauthorized: false
+    }
+}));
+
+
 
 
 app.get('/', (req, res) => {
@@ -109,26 +89,8 @@ app.get('/', (req, res) => {
 
 app.post('/adduser', (req, res) => {
 
-    adduserDebugger(req.body)
 
-    const requestError = isValidateAdduserRequest(req.body)
-
-    if (requestError.error) {
-        adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send({ status: "error" })
-    }
-
-    isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
-
-        const isUnique = value === 0
-        adduserDebugger('username and email are both unique =', isUnique)
-
-        if (!isUnique)
-            return res.send({ status: "error" })
-
-        createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
-
-    })
+    addUser(req, res)
 
 })
 
@@ -166,7 +128,7 @@ app.listen(port, () => {
 })
 
 //validation checkers
-function isValidateAdduserRequest(request) {
+function isValidateAdduserRequest(req) {
 
     const schema = {
 
@@ -176,7 +138,7 @@ function isValidateAdduserRequest(request) {
 
     }
 
-    return Joi.validate(request, schema)
+    return Joi.validate(req.body, schema)
 }
 
 async function isUsernameEmailUnique(username, email) {
@@ -232,6 +194,27 @@ async function createUserAndSentEmail(username, email, password, active, req, re
             // return 0
         }
     });
+}
+
+function addUser(req, res) {
+    const requestError = isValidateAdduserRequest(req)
+
+    if (requestError.error) {
+        adduserDebugger('error on fetching user request(contents)', requestError.error.message)
+        return res.send({ status: "error" })
+    }
+
+    isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
+
+        const isUnique = value === 0
+        adduserDebugger('username and email are both unique =', isUnique)
+
+        if (!isUnique)
+            return res.send({ status: "error" })
+
+        createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
+
+    })
 }
 
 async function activateUser(req, res) {
