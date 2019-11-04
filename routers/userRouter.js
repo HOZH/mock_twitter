@@ -5,6 +5,7 @@ const router = express.Router()
 const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
 const verifyDebugger = require('debug')('app:verify')
+const followDebugger = require('debug')('app:follow')
 const Joi = require('joi')
 const db = require('./../db')
 const uuid = require('uuid');
@@ -28,6 +29,12 @@ router.route('/adduser').post((req, res) => {
 })
 
 
+router.route('followe').post((req, res) => {
+
+    toggleFollow(req, res)
+})
+
+
 router.route('/verify').post((req, res) => {
     activateUser(req, res)
 })
@@ -38,9 +45,31 @@ router.route('/login').post((req, res) => {
 
 router.route('/logout').post((req, res) => {
     req.session = null
-    res.send({status: "OK"})
+    res.send({ status: "OK" })
 })
 
+
+async function toggleFollow(req, res) {
+
+    followDebugger(req.body)
+    let name = req.body.username
+    const user = await User.findOneAndUpdate({ username:name},
+        {
+            $set: {
+                following: {  name: req.body.follow || true  }
+            }
+
+        }, { new: true })
+    followDebugger(user)
+    if (user)
+        return res.send({ status: "OK" })
+
+    followDebugger("something went wrong with toggling follow operation")
+    return res.send({ status: "error" })
+
+
+
+}
 
 function isValidateAdduserRequest(req) {
 
@@ -59,7 +88,7 @@ async function isUsernameEmailUnique(username, email) {
 
     const user = await User
         .find()
-        .or([{username: username}, {email: email}])
+        .or([{ username: username }, { email: email }])
 
     adduserDebugger(username, email, "record found:", user)
 
@@ -100,10 +129,10 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({status: "error"})
+            return res.send({ status: "error" })
 
         } else {
-            return res.send({status: "OK"})
+            return res.send({ status: "OK" })
 
             // return 0
         }
@@ -111,11 +140,13 @@ async function createUserAndSentEmail(username, email, password, active, req, re
 }
 
 function addUser(req, res) {
+
+    adduserDebugger(req.body)
     const requestError = isValidateAdduserRequest(req)
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send({status: "error"})
+        return res.send({ status: "error" })
     }
 
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
@@ -124,7 +155,7 @@ function addUser(req, res) {
         adduserDebugger('username and email are both unique =', isUnique)
 
         if (!isUnique)
-            return res.send({status: "error"})
+            return res.send({ status: "error" })
 
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
@@ -134,26 +165,26 @@ function addUser(req, res) {
 async function activateUser(req, res) {
 
     verifyDebugger(req.body)
-    const user = await User.findOneAndUpdate({uuid: {$in: ['abracadabra', req.body.key]}, email: req.body.email},
+    const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.body.key] }, email: req.body.email },
         {
             $set: {
                 active: true
             }
 
-        }, {new: true})
+        }, { new: true })
     verifyDebugger(user)
     if (user)
-        return res.send({status: "OK"})
+        return res.send({ status: "OK" })
 
     verifyDebugger("something went wrong when update active property")
-    return res.send({status: "error"})
+    return res.send({ status: "error" })
 
 }
 
 async function loginUser(req, res) {
 
     loginDebugger(req.body)
-    const user = await User.findOne({username: req.body.username, password: req.body.password})
+    const user = await User.findOne({ username: req.body.username, password: req.body.password })
 
     loginDebugger(user)
 
@@ -164,13 +195,14 @@ async function loginUser(req, res) {
             loginDebugger("log in performed")
             req.session.isLogin = true
             req.session.username = req.body.username
-            return res.send({status: "OK"})
+            // req.session.user =
+            return res.send({ status: "OK" })
 
         }
 
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
-    return res.send({status: "error"})
+    return res.send({ status: "error" })
 
 }
 

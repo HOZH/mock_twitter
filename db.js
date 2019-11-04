@@ -4,8 +4,8 @@ const dbDebugger = require('debug')('app:db')
 
 mongoose
     .connect('mongodb://127.0.0.1/my_db').then(() => {
-    dbDebugger('Connected to MongoDB...')
-})
+        dbDebugger('Connected to MongoDB...')
+    })
     .catch(err => dbDebugger('could not connect to the mongodb... ', err))
 const userSchema = new mongoose.Schema({
 
@@ -13,7 +13,11 @@ const userSchema = new mongoose.Schema({
     email: String,
     uuid: String,
     password: String,
-    active: Boolean
+    active: Boolean,
+    following: { type: Object, default: {} },
+    follower: { type: Object, default: {} },
+    // following: { type: Array, default: [] },
+    // follower: { type: Array, default: [] },
 })
 const itemSchema = new mongoose.Schema({
     id: String,
@@ -21,7 +25,8 @@ const itemSchema = new mongoose.Schema({
     property: Object,
     retweeted: Number,
     content: Object,
-    timestamp: {type: Number, default: Date.now() / 1000}
+    timestamp: { type: Number, default: Date.now() / 1000 },
+
 })
 
 const User = mongoose.model('User', userSchema)
