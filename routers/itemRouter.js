@@ -30,6 +30,56 @@ router.route('/search').post((req, res) => {
 })
 
 
+router.route('/item/:id').delete((req,res)=>{
+
+    //fixme no sure if I should also delete the item from userside
+
+    deleteItem(req,res)
+
+
+
+
+
+
+})
+
+async function deleteItem(req,res){
+
+    const item = await Item.findOne({ id:req.params.id})
+
+    if(item)
+        if (item.username===req.session.username){
+
+            return performDeleteItem(req,res)
+
+        }
+    
+
+
+        return res.status(800).send({status:'error'})
+    
+
+
+}
+
+async function performDeleteItem(req, res) {
+
+    const item = await Item.findOneAndDelete({ id: req.params.id },(err,doc)=>{
+
+
+        if(doc)
+            return res.status(200).send({ item: doc.id })
+        else
+            return res.status(800).send({ status: 'error' })
+
+
+
+    })
+
+
+
+}
+
 async function addItem(req, res) {
 
     additemDebugger("content", req.body.content, "child type", req.body.childType)

@@ -8,6 +8,8 @@ const verifyDebugger = require('debug')('app:verify')
 const followDebugger = require('debug')('app:follow')
 const getuserDebugger = require('debug')('app:getuser')
 const getuserpostsDebugger = require('debug')('app:getuserposts')
+const print = require('debug')('app:print')
+
 
 
 const Joi = require('joi')
@@ -33,7 +35,7 @@ router.route('/adduser').post((req, res) => {
 })
 
 
-router.route('follower').post((req, res) => {
+router.route('/follow').post((req, res) => {
 
     toggleFollow(req, res)
 })
@@ -62,6 +64,47 @@ router.route('/user/:username/posts').get((req, res) => {
 
     getUserPosts(req, res)
 })
+
+router.route('/user/:username/following').get((req, res) => { 
+
+
+    User.findOne({ username: req.params.username }, (err, doc) => {
+
+        let limit = (req.query.limit || 50) > 200 ? 200 : (req.query.limit || 50)
+
+        if (doc) {
+
+            let temp = [...Object.values(doc.following)].splice(0, limit)
+
+
+            return res.send({ status: 'OK', users: temp })
+        }
+
+        return res.send({ status: 'error' })
+    })//no need to the select for filtering
+
+})
+router.route('/user/:username/followers').get((req, res) => {
+
+
+    User.findOne({ username: req.params.username }, (err, doc) => {
+
+        let limit = (req.query.limit || 50) > 200 ? 200 : (req.query.limit || 50)
+
+        if (doc) {
+
+            let temp = [...Object.values(doc.followers)].splice(0, limit)
+
+
+            return res.send({ status: 'OK', users: temp })
+        }
+
+        return res.send({ status: 'error' })
+    })//no need to the select for filtering
+
+
+})
+
 
 async function getUserPosts(req, res) {
 
@@ -108,23 +151,104 @@ async function getUser(req, res) {
 async function toggleFollow(req, res) {
 
     followDebugger(req.body)
-    let name = "following." + req.body.username
-    const user = await
+
+    // let name = "following." + req.body.username
+
+    print(req.session.username)
+    const user = await User.findOne({ username: req.session.username })
 
 
-        User.findOneAndUpdate({ username: name },
-            {
-                $set: {
-                    name: (req.body.follow || true)
-                }
+    let temp = user.following
 
-            }, { new: true })
-    followDebugger(user)
-    if (user)
-        return res.send({ status: "OK" })
+    let follow = (req.body.follow === undefined || req.body.follow === null) ? true : req.body.follow
 
-    followDebugger("something went wrong with toggling follow operation")
-    return res.send({ status: "error" })
+
+
+    const target = await User.findOne({ username: req.body.username })
+
+    if (!target)
+        return res.send({ status: "error" })
+
+
+    const targetFollowers = target.followers
+
+    if (follow) {
+        print(req.session.username + " is following " + req.body.username)
+        temp[req.body.username] = req.body.username
+        targetFollowers[req.session.username] = req.session.username
+
+
+
+
+
+    }
+    else {
+        delete temp[req.body.username]
+        delete targetFollowers[req.session.username]
+
+
+    }
+
+    await User.findOneAndUpdate({ username: req.session.username }, {
+
+        $set: {
+
+            following: temp
+        }
+    }, { new: true },
+
+
+        (err, u) => {
+
+
+            updateTargetFollower(req, res, targetFollowers)
+
+
+        }
+
+
+
+    )
+
+
+    async function updateTargetFollower(req, res, newContent) {
+
+
+
+        await User.findOneAndUpdate({ username: req.body.username }, {
+
+
+            $set: {
+
+                followers: newContent
+            }
+        }, { new: true }, (err, doc) => {
+
+
+            print(doc)
+            if (doc)
+                return res.send({ status: "OK" })
+
+            followDebugger("something went wrong with toggling follow operation")
+            return res.send({ status: "error" })
+
+
+
+        })
+
+
+    }
+
+
+
+
+
+
+
+
+
+    // followDebugger(user)
+
 
 
 
@@ -164,7 +288,9 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         email: email,
         password: password,
         uuid: token,
-        active: active
+        active: active,
+        following: {},
+        followers: {}
 
     })
     const result = await user.save()
