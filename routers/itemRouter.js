@@ -12,6 +12,11 @@ const uuid = require('uuid');
 const Item = db.Item
 
 router.route('/additem').post((req, res) => {
+
+    // console.log('123')
+    // return res.send('ok')
+    // additemDebugger("content", req.body.content, "child type", req.body.childType)
+
     addItem(req, res)
 })
 
@@ -20,11 +25,20 @@ router.route('/item/:itemID').get((req, res) => {
 })
 
 router.route('/search').post((req, res) => {
+
+    searchitemDebugger(req.body)
     searchItem(req, res)
 })
 
 
 async function addItem(req, res) {
+
+
+    // return res.send({status:'OK'})
+
+    console.log('once upon the time');
+    console.log("content", req.body.content, "child type", req.body.childType );
+    additemDebugger("content",req.body.content,"child type",req.body.childType )
 
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
@@ -40,7 +54,7 @@ async function addItem(req, res) {
 
     const childType = req.body.childType
 
-    if (childType !== 'retweet' && childType !== 'reply' && childType !== null) {
+    if (childType !== 'retweet' && childType !== 'reply' && childType !== null && childType !==undefined) {
         additemDebugger('wrong child type')
         return res.send({status: "error", error: 'wrong childType'})
 

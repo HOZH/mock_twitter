@@ -60,12 +60,15 @@ app.use(itemRouter)
 
 app.get('/', (req, res) => {
 
-    print(req.session, "session")
+    // print(req.session, "session")
 
     req.session.count = (req.session.count || 0) + 1
     print(req.session.count)
 
-    res.send('ok')
+    dataUrl = "https://i.ibb.co/GnHbvTr/IMG-0643.jpg";
+    return res.send(`<img src=${dataUrl}>`);
+    
+    // res.send('ok')
 })
 
 
