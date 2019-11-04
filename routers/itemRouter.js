@@ -5,6 +5,8 @@ const router = express.Router()
 const getitemDebugger = require('debug')('app:getitem')
 const additemDebugger = require('debug')('app:additem')
 const searchitemDebugger = require('debug')('app:searchitem')
+const print = require('debug')('app:print')
+
 
 const db = require('./../db')
 const uuid = require('uuid');
@@ -62,12 +64,31 @@ async function addItem(req, res) {
         content: req.body.content,
 
     })
+
+    
     additemDebugger("saving item")
 
     const result = await item.save()
 
-    additemDebugger("~~~~~printing result~~~~~~~:", result)
+    let tempKey  = "posts.$."+token
 
+    print('tempkey ',tempKey)
+    const user = await User.findOne({ username: req.session.username })
+
+
+
+
+
+
+    // await user.save()
+    user.posts.push(token)
+    await user.save()
+
+        print(user)
+        // print(token)
+
+    additemDebugger("~~~~~printing result~~~~~~~:", result)
+if(user)
     return res.send({ status: 'OK', id: token })
 
 }
@@ -95,6 +116,7 @@ async function searchItem(req, res) {
 
     searchitemDebugger("time stamp is: ", timestamp);
     let limit = (req.body.limit || 25);
+    limit = limit > 100 ? 100 : limit
 
     searchitemDebugger("limit is: ", limit);
 

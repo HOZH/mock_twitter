@@ -6,6 +6,10 @@ const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
 const verifyDebugger = require('debug')('app:verify')
 const followDebugger = require('debug')('app:follow')
+const getuserDebugger = require('debug')('app:getuser')
+const getuserpostsDebugger = require('debug')('app:getuserposts')
+
+
 const Joi = require('joi')
 const db = require('./../db')
 const uuid = require('uuid');
@@ -29,7 +33,7 @@ router.route('/adduser').post((req, res) => {
 })
 
 
-router.route('followe').post((req, res) => {
+router.route('follower').post((req, res) => {
 
     toggleFollow(req, res)
 })
@@ -49,17 +53,72 @@ router.route('/logout').post((req, res) => {
 })
 
 
+router.route('/user/:username').get((req, res) => {
+
+    getUser(req, res)
+})
+
+router.route('/user/:username/posts').get((req, res) => {
+
+    getUserPosts(req, res)
+})
+
+async function getUserPosts(req, res) {
+
+    const user = await User.findOne({ username: req.params.username })
+
+    if (!user) {
+
+        getuserpostsDebugger('user ' + req.params.username + ' not found')
+        return res.send({ status: 'error' })
+
+    }
+
+    let limit = (req.query.limit || 50) > 200 ? 200 : (req.query.limit || 50)
+
+    const answer = [...user.posts].splice(0, limit)
+
+    getuserpostsDebugger("answer" + answer)
+    return res.send({
+        status: 'OK', items: answer
+    })
+}
+
+async function getUser(req, res) {
+
+    const user = await User.findOne({ username: req.params.username })
+
+    if (!user) {
+
+        getuserDebugger('user ' + req.params.username + ' not found')
+        return res.send({ status: 'error' })
+
+    }
+
+
+    return res.send({
+        status: 'OK', user: {
+            email: user.email,
+            following: Object.keys(user.following).length,
+            followers: Object.keys(user.followers).length
+        }
+    })
+}
+
 async function toggleFollow(req, res) {
 
     followDebugger(req.body)
-    let name = req.body.username
-    const user = await User.findOneAndUpdate({ username:name},
-        {
-            $set: {
-                following: {  name: req.body.follow || true  }
-            }
+    let name = "following." + req.body.username
+    const user = await
 
-        }, { new: true })
+
+        User.findOneAndUpdate({ username: name },
+            {
+                $set: {
+                    name: (req.body.follow || true)
+                }
+
+            }, { new: true })
     followDebugger(user)
     if (user)
         return res.send({ status: "OK" })
