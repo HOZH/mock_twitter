@@ -29,8 +29,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
 
-    //res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+    // res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
     // res.setHeader("Access-Control-Allow-Origin", "*");
     //res.setHeader("Access-Control-Allow-Origin", "130.245.169.40/login");
     //res.setHeader("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");

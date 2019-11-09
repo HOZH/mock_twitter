@@ -145,10 +145,14 @@ async function searchItem(req, res) {
     searchitemDebugger("in function searching items");
     searchitemDebugger("req.body = ", req.body)
 
-    let timestamp = (req.body.timestamp || Date.now() / 1000);
+    // let timestamp = (req.body.timestamp || Date.now() / 1000);
+    let timestamp = (parseFloat(req.body.timestamp )|| Date.now() / 1000);
+
 
     searchitemDebugger("time stamp is: ", timestamp);
-    let limit = (req.body.limit || 25);
+    // let limit = (req.body.limit || 25);
+    let limit = (parseInt(req.body.limit) || 25);
+
     limit = limit > 100 ? 100 : limit
 
     searchitemDebugger("limit is: ", limit);
@@ -160,18 +164,30 @@ async function searchItem(req, res) {
 
     searchitemDebugger("follow is: ", req.body.following);
 
-    const following = (req.body.following === undefined || req.body.following === null) ? true : req.body.following
+    let following = (req.body.following === undefined || req.body.following === null) ? true : req.body.following
+
+
+    //fixme
+    following = req.session.username? following:false
 
     searchitemDebugger("following is: ", req.body.following);
 
 
-    let current_following = await User.findOne({ username: req.body.username })
+    let current_following = await User.findOne({ username: req.body.username||'nobodys name' })
+
+
+    
 
 
     searchitemDebugger('current following is ', current_following)
 
 
-    let isFollowed = current_following ? name in current_following.following : false
+    let isFollowed = current_following ? name in current_following.following : false //is a user really following the given user
+
+
+    isFollowed = req.body.username? isFollowed :true
+
+    searchitemDebugger('isFollowed: ', isFollowed)
 
 
     searchitemDebugger('q is ', req.body.q)
@@ -186,7 +202,7 @@ async function searchItem(req, res) {
 
     searchitemDebugger('(following && !isFollowed)', (following && !isFollowed))
     const items =
-        (following && !isFollowed) ?
+        (following && !isFollowed) ? 
             [] :
             // const items =
             keyWords.length ? await Item.find({

@@ -51,6 +51,7 @@ router.route('/login').post((req, res) => {
 
 router.route('/logout').post((req, res) => {
     req.session = null
+    print(req.session)
     res.send({ status: "OK" })
 })
 
