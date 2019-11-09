@@ -176,6 +176,12 @@ async function searchItem(req, res) {
     let current_following = await User.findOne({ username: req.body.username||'nobodys name' })
 
 
+
+
+        let current_user = await User.findOne({ username: req.session.username||'nobodys name' })
+
+
+
     
 
 
@@ -204,8 +210,37 @@ async function searchItem(req, res) {
     const items =
         (following && !isFollowed) ? 
             [] :
-            // const items =
-            keyWords.length ? await Item.find({
+            
+            following ? 
+            
+                (keyWords.length ? await Item.find({
+                    timestamp: { $lte: timestamp },
+                    content: { $in: keyWords },
+
+
+
+                    username: req.body.username? req.body.username : {$in :[...Object.keys(current_user.following)]}
+
+
+
+                }).limit(limit) :
+                    await Item.find({
+                        timestamp: { $lte: timestamp },
+                        // content: { $in: keyWords },
+
+                        username: req.body.username ? req.body.username : { $in: [...Object.keys(current_user.following)] }
+
+                        // username: name,
+
+
+
+
+                    }).limit(limit))
+            
+            :
+            
+            
+            (keyWords.length ? await Item.find({
                 timestamp: { $lte: timestamp },
                 content: { $in: keyWords },
                 username: name,
@@ -214,7 +249,7 @@ async function searchItem(req, res) {
                     timestamp: { $lte: timestamp },
                     // content: { $in: keyWords },
                     username: name,
-                }).limit(limit)
+                }).limit(limit))
 
 
     searchitemDebugger('item =', items)
