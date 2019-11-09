@@ -30,11 +30,11 @@ router.route('/search').post((req, res) => {
 })
 
 
-router.route('/item/:id').delete((req,res)=>{
+router.route('/item/:id').delete((req, res) => {
 
     //fixme no sure if I should also delete the item from userside
 
-    deleteItem(req,res)
+    deleteItem(req, res)
 
 
 
@@ -43,31 +43,31 @@ router.route('/item/:id').delete((req,res)=>{
 
 })
 
-async function deleteItem(req,res){
+async function deleteItem(req, res) {
 
-    const item = await Item.findOne({ id:req.params.id})
+    const item = await Item.findOne({ id: req.params.id })
 
-    if(item)
-        if (item.username===req.session.username){
+    if (item)
+        if (item.username === req.session.username) {
 
-            return performDeleteItem(req,res)
+            return performDeleteItem(req, res)
 
         }
-    
 
 
-        return res.status(800).send({status:'error'})
-    
+
+    return res.status(800).send({ status: 'error' })
+
 
 
 }
 
 async function performDeleteItem(req, res) {
 
-    const item = await Item.findOneAndDelete({ id: req.params.id },(err,doc)=>{
+    const item = await Item.findOneAndDelete({ id: req.params.id }, (err, doc) => {
 
 
-        if(doc)
+        if (doc)
             return res.status(200).send({ item: doc.id })
         else
             return res.status(800).send({ status: 'error' })
@@ -81,65 +81,48 @@ async function performDeleteItem(req, res) {
 }
 
 async function addItem(req, res) {
-
     additemDebugger("content", req.body.content, "child type", req.body.childType)
-
+    console.log("session: ", req.session.username);
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
-        return res.send({ status: "error", error: 'just stop asking' })
+        return res.status(400).send({ status: "error", error: 'just stop asking' })
     }
 
     if (!req.body['content']) {
-
         additemDebugger('empty content')
-        return res.send({ status: "error", error: 'empty content' })
-
+        return res.status(400).send({ status: "error", error: 'empty content' })
     }
 
     const childType = req.body.childType
 
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null && childType !== undefined) {
         additemDebugger('wrong child type')
-        return res.send({ status: "error", error: 'wrong childType' })
-
+        return res.status(400).send({ status: "error", error: 'wrong childType' })
     }
 
     const token = uuid.v4()
-
     const item = new Item({
         id: token,
         username: req.session.username,
         property: { likes: 0 },
         retweeted: 0,
         content: req.body.content,
-
     })
 
-    
+
     additemDebugger("saving item")
-
     const result = await item.save()
-
-    let tempKey  = "posts.$."+token
-
-    print('tempkey ',tempKey)
+    let tempKey = "posts.$." + token
+    print('tempkey ', tempKey)
     const user = await User.findOne({ username: req.session.username })
-
-
-
-
-
-
     // await user.save()
     user.posts.push(token)
     await user.save()
-
-        print(user)
-        // print(token)
-
+    print(user)
+    // print(token)
     additemDebugger("~~~~~printing result~~~~~~~:", result)
-if(user)
-    return res.send({ status: 'OK', id: token })
+    if (user)
+        return res.status(200).send({ status: 'OK', id: token })
 
 }
 
@@ -149,12 +132,12 @@ async function getItem(req, res) {
     const item = await Item.findOne({ id: id })
     getitemDebugger(item)
     if (item) {
-        return res.send({
+        return res.status(200).send({
             status: "OK",
             item: item
         })
     }
-    return res.send({ status: "error", error: "item not found" })
+    return res.status(400).send({ status: "error", error: "item not found" })
 }
 
 async function searchItem(req, res) {
@@ -231,7 +214,7 @@ async function searchItem(req, res) {
 
         searchitemDebugger("returning items with ok")
         searchitemDebugger("result: ", result)
-        return res.send({ status: "OK", items: result })
+        return res.status(200).send({ status: "OK", items: result })
     }
 
     searchitemDebugger("items not found, error")

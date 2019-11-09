@@ -1,7 +1,6 @@
 
 const express = require('express')
 const router = express.Router()
-
 const adduserDebugger = require('debug')('app:adduser')
 const loginDebugger = require('debug')('app:login')
 const verifyDebugger = require('debug')('app:verify')
@@ -9,8 +8,6 @@ const followDebugger = require('debug')('app:follow')
 const getuserDebugger = require('debug')('app:getuser')
 const getuserpostsDebugger = require('debug')('app:getuserposts')
 const print = require('debug')('app:print')
-
-
 
 const Joi = require('joi')
 const db = require('./../db')
@@ -44,6 +41,9 @@ router.route('/follow').post((req, res) => {
 router.route('/verify').post((req, res) => {
     activateUser(req, res)
 })
+router.route('/verify/:email/:key').get((req, res) => {
+    activateUserII(req, res)
+})
 
 router.route('/login').post((req, res) => {
     loginUser(req, res)
@@ -54,35 +54,24 @@ router.route('/logout').post((req, res) => {
     res.send({ status: "OK" })
 })
 
-
 router.route('/user/:username').get((req, res) => {
-
     getUser(req, res)
 })
 
 router.route('/user/:username/posts').get((req, res) => {
-
     getUserPosts(req, res)
 })
 
-router.route('/user/:username/following').get((req, res) => { 
-
+router.route('/user/:username/following').get((req, res) => {
 
     User.findOne({ username: req.params.username }, (err, doc) => {
-
         let limit = (req.query.limit || 50) > 200 ? 200 : (req.query.limit || 50)
-
         if (doc) {
-
             let temp = [...Object.values(doc.following)].splice(0, limit)
-
-
-            return res.send({ status: 'OK', users: temp })
+            return res.status(200).send({ status: 'OK', users: temp })
         }
-
-        return res.send({ status: 'error' })
+        return res.status(400).send({ status: 'error' })
     })//no need to the select for filtering
-
 })
 router.route('/user/:username/followers').get((req, res) => {
 
@@ -96,10 +85,10 @@ router.route('/user/:username/followers').get((req, res) => {
             let temp = [...Object.values(doc.followers)].splice(0, limit)
 
 
-            return res.send({ status: 'OK', users: temp })
+            return res.status(200).send({ status: 'OK', users: temp })
         }
 
-        return res.send({ status: 'error' })
+        return res.status(400).send({ status: 'error' })
     })//no need to the select for filtering
 
 
@@ -113,7 +102,7 @@ async function getUserPosts(req, res) {
     if (!user) {
 
         getuserpostsDebugger('user ' + req.params.username + ' not found')
-        return res.send({ status: 'error' })
+        return res.status(400).send({ status: 'error' })
 
     }
 
@@ -122,7 +111,7 @@ async function getUserPosts(req, res) {
     const answer = [...user.posts].splice(0, limit)
 
     getuserpostsDebugger("answer" + answer)
-    return res.send({
+    return res.status(200).send({
         status: 'OK', items: answer
     })
 }
@@ -134,12 +123,12 @@ async function getUser(req, res) {
     if (!user) {
 
         getuserDebugger('user ' + req.params.username + ' not found')
-        return res.send({ status: 'error' })
+        return res.status(400).send({ status: 'error' })
 
     }
 
 
-    return res.send({
+    return res.status(200).send({
         status: 'OK', user: {
             email: user.email,
             following: Object.keys(user.following).length,
@@ -167,7 +156,7 @@ async function toggleFollow(req, res) {
     const target = await User.findOne({ username: req.body.username })
 
     if (!target)
-        return res.send({ status: "error" })
+        return res.status(400).send({ status: "error" })
 
 
     const targetFollowers = target.followers
@@ -227,10 +216,10 @@ async function toggleFollow(req, res) {
 
             print(doc)
             if (doc)
-                return res.send({ status: "OK" })
+                return res.status(200).send({ status: "OK" })
 
             followDebugger("something went wrong with toggling follow operation")
-            return res.send({ status: "error" })
+            return res.status(400).send({ status: "error" })
 
 
 
@@ -314,10 +303,10 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         if (error) {
             adduserDebugger('error on sending email', error)
             // return -1
-            return res.send({ status: "error" })
+            return res.status(400).send({ status: "error" })
 
         } else {
-            return res.send({ status: "OK" })
+            return res.status(200).send({ status: "OK" })
 
             // return 0
         }
@@ -331,7 +320,7 @@ function addUser(req, res) {
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.send({ status: "error" })
+        return res.status(400).send({ status: "error" })
     }
 
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
@@ -340,7 +329,7 @@ function addUser(req, res) {
         adduserDebugger('username and email are both unique =', isUnique)
 
         if (!isUnique)
-            return res.send({ status: "error" })
+            return res.status(400).send({ status: "error" })
 
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
@@ -359,20 +348,35 @@ async function activateUser(req, res) {
         }, { new: true })
     verifyDebugger(user)
     if (user)
-        return res.send({ status: "OK" })
+        return res.status(200).send({ status: "OK" })
 
     verifyDebugger("something went wrong when update active property")
-    return res.send({ status: "error" })
+    return res.status(400).send({ status: "error" })
 
 }
+async function activateUserII(req, res) {
 
+    verifyDebugger(req.params)
+    const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.params.key] }, email: req.params.email },
+        {
+            $set: {
+                active: true
+            }
+
+        }, { new: true })
+    verifyDebugger(user)
+    if (user)
+        return res.status(200).send({ status: "OK" })
+
+    verifyDebugger("something went wrong when update active property")
+    return res.status(400).send({ status: "error" })
+
+}
 async function loginUser(req, res) {
 
     loginDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
-
     loginDebugger(user)
-
     if (user)
 
         if (user.active) {
@@ -381,13 +385,13 @@ async function loginUser(req, res) {
             req.session.isLogin = true
             req.session.username = req.body.username
             // req.session.user =
-            return res.send({ status: "OK" })
+            return res.status(200).send({ status: "OK" })
 
         }
 
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
-    return res.send({ status: "error" })
+    return res.status(400).send({ status: "error" })
 
 }
 

@@ -22,12 +22,18 @@ app.use(cookieSession({
 //setup res.body
 app.use(express.json())
 //key=value&key=value
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 //setup path prefix for static files
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
-    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    //res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+    res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
+    // res.setHeader("Access-Control-Allow-Origin", "*");
+    //res.setHeader("Access-Control-Allow-Origin", "130.245.169.40/login");
+    //res.setHeader("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
     // Request methods you wish to allow
     res.setHeader(
         "Access-Control-Allow-Methods",
@@ -41,6 +47,7 @@ app.use(function (req, res, next) {
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
     res.setHeader("Access-Control-Allow-Credentials", true);
+
     next();
 });
 //setup view engine
@@ -57,22 +64,30 @@ if (app.get('env') === 'development') {
 app.use(userRouter)
 app.use(itemRouter)
 
+app.use(express.static(path.join(__dirname, 'build')));
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
-app.get('/', (req, res) => {
+app.get('/login', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+// app.get('/', (req, res) => {
 
-    // print(req.session, "session")
+//     // print(req.session, "session")
 
-    req.session.count = (req.session.count || 0) + 1
-    print(req.session.count)
+//     req.session.count = (req.session.count || 0) + 1
+//     print(req.session.count)
 
-    dataUrl = "https://i.ibb.co/GnHbvTr/IMG-0643.jpg";
-    return res.send(`<img src=${dataUrl}>`);
-    
-    // res.send('ok')
-})
+//     dataUrl = "https://i.ibb.co/GnHbvTr/IMG-0643.jpg";
+//     return res.send(`<img src=${dataUrl}>`);
+
+//     // res.send('ok')
+// })
 
 
-const port = process.env.PORT || 3000
+// const port = process.env.PORT || 3000
+const port = 80
 
 app.listen(port, () => {
     print(process.env.PORT)
