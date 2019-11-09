@@ -187,8 +187,9 @@ async function searchItem(req, res) {
 
     searchitemDebugger('current following is ', current_following)
 
-
-    let isFollowed = current_following ? name in current_following.following : false //is a user really following the given user
+    // searchitemDebugger("is name in", current_following.followers,req.body.username in Object.keys(current_following.followers))
+    // print(Object.keys(current_following.followers),req.session.username)
+    let isFollowed = current_following ? (Object.keys(current_following.followers).includes(req.session.username)) : false //is a user really following the given user
 
 
     isFollowed = req.body.username? isFollowed :true
