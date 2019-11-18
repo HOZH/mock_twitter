@@ -279,16 +279,28 @@ function addUser(req, res) {
 async function activateUser(req, res) {
 
     verifyDebugger("req.body:", req.body)                                //abracadabra
-    const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.body.key] }, email: req.body.email },
-        {
-            $set: {
-                active: true
-            }
+    // const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.body.key] }, email: req.body.email },
+    //     {
+    //         $set: {
+    //             active: true
+    //         }
 
-        }, { active: true })
-    verifyDebugger("user: ", user)
-    if (user)
-        return res.status(200).send({ status: "OK" })
+    //     }, { active: true })
+    // verifyDebugger("user: ", user)
+    // if (user)
+    //     return res.status(200).send({ status: "OK" })
+    let key = req.body.key;
+    let email = req.body.email;
+    let user = await User.findOne({ email: email });
+
+    if (user) {
+        if ((key == "abracadabra") || (key == user.uuid)) {
+            user.active = true;
+            await user.save();
+            verifyDebugger("user verify successed");
+            return res.status(200).send({ status: "OK" });
+        }
+    }
 
     verifyDebugger("something went wrong when update active property")
     return res.status(400).send({ status: "error", error: "error" })
@@ -297,18 +309,30 @@ async function activateUser(req, res) {
 async function activateUserII(req, res) {
 
     verifyDebugger("req.params: ", req.params)
-    const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.params.key] }, email: req.params.email },
-        {
-            $set: {
-                active: true
-            }
+    let key = req.body.key;
+    let email = req.body.email;
+    let user = await User.findOne({ email: email });
 
-        }, { active: true })
-    verifyDebugger("user: ", user)
     if (user) {
-        adduserDebugger("user verify success");
-        return res.status(200).send({ status: "OK" })
+        if ((key == "abracadabra") || (key == user.uuid)) {
+            user.active = true;
+            await user.save();
+            verifyDebugger("user verify successed");
+            return res.status(200).send({ status: "OK" });
+        }
     }
+    // const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.params.key] }, email: req.params.email },
+    //     {
+    //         $set: {
+    //             active: true
+    //         }
+
+    //     }, { active: true })
+    // verifyDebugger("user: ", user)
+    // if (user) {
+    //     adduserDebugger("user verify success");
+    //     return res.status(200).send({ status: "OK" })
+    // }
 
 
     verifyDebugger("something went wrong when update active property")
