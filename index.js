@@ -30,7 +30,7 @@ app.use(function (req, res, next) {
     // Website you wish to allow to connect
 
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-    // res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
+    //res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
     // res.setHeader("Access-Control-Allow-Origin", "*");
     //res.setHeader("Access-Control-Allow-Origin", "130.245.169.40/login");
     //res.setHeader("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
@@ -47,7 +47,7 @@ app.use(function (req, res, next) {
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
     res.setHeader("Access-Control-Allow-Credentials", true);
-
+    limits: { fileSize: 50 * 1024 * 1024 };
     next();
 });
 //setup view engine
