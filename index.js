@@ -29,8 +29,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
 
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-    //res.setHeader("Access-Control-Allow-Origin", "http://fishking.cse356.compas.cs.stonybrook.edu");
+    //res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+    res.setHeader("Access-Control-Allow-Origin", "http://someone.cse356.compas.cs.stonybrook.edu");
     // res.setHeader("Access-Control-Allow-Origin", "*");
     //res.setHeader("Access-Control-Allow-Origin", "130.245.169.40/login");
     //res.setHeader("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
@@ -65,13 +65,42 @@ app.use(userRouter)
 app.use(itemRouter)
 
 app.use(express.static(path.join(__dirname, 'build')));
-// app.get('/', function (req, res) {
-//     res.sendFile(path.join(__dirname, 'build', 'index.html'));
-// });
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
-// app.get('/login', function (req, res) {
-//     res.sendFile(path.join(__dirname, 'build', 'index.html'));
-// });
+app.get('/login', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/signup', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/verify', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/item/:itemID', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+app.get('/user/:username', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/user/:username/posts', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/user/:username/followers', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+app.get('/user/:username/following', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+app.get('/follow', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+
+
 // app.get('/', (req, res) => {
 
 //     // print(req.session, "session")
