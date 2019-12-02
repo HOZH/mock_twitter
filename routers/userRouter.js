@@ -198,9 +198,9 @@ function isValidateAdduserRequest(req) {
 
 async function isUsernameEmailUnique(username, email) {
 
-    const user = await User
-        .find()
-        .or([{ username: username }, { email: email }])
+    const user = await User.find({ $or: [{ username: username }, { email: email }] })
+    // .find()
+    // .or([{ username: username }, { email: email }])
 
     adduserDebugger(username, email, "record found:", user)
 
@@ -210,6 +210,7 @@ async function isUsernameEmailUnique(username, email) {
 async function createUserAndSentEmail(username, email, password, active, req, res) {
 
     const token = uuid.v4()
+    adduserDebugger(123)
 
     const user = new User({
 
@@ -239,18 +240,26 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         html: html
     }
 
-    smtpTransport.sendMail(mailOptions, function (error, response) {
-        if (error) {
-            adduserDebugger('error on sending email', error)
-            // return -1
-            return res.status(400).send({ status: "error", error: "error" })
+    // return res.status(200).send({ status: "OK" })
 
-        } else {
-            return res.status(200).send({ status: "OK" })
+    res.status(200).send({ status: "OK" })
+    return smtpTransport.sendMail(mailOptions)
 
-            // return 0
-        }
-    });
+
+
+
+    // smtpTransport.sendMail(mailOptions, function (error, response) {
+    //     if (error) {
+    //         adduserDebugger('error on sending email', error)
+    //         // return -1
+    //         return res.status(400).send({ status: "error", error: "error" })
+
+    //     } else {
+    //         return res.status(200).send({ status: "OK" })
+
+    //         // return 0
+    //     }
+    // });
 }
 
 function addUser(req, res) {
@@ -270,6 +279,10 @@ function addUser(req, res) {
 
         if (!isUnique)
             return res.status(400).send({ status: "error", error: "error" })
+
+
+        // return res.status(200).send({ status: "ok", error: "ok" })
+
 
         createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
