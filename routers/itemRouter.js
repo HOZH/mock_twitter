@@ -127,7 +127,7 @@ async function addItem(req, res) {
     //check and set default of the parent and the media
     let parent = req.body.parent;
     let media = req.body.media;
-    // print("req.bodu.media: ", req.body.media);
+    print("req.bodu.media: ", req.body.media);
     if (parent == null || parent == undefined) {
         parent = "";
     }
