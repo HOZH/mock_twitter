@@ -71,7 +71,7 @@ router.route('/user/:username/following').get((req, res) => {
             let temp = [...Object.values(doc.following)].splice(0, limit)
             return res.status(200).send({ status: 'OK', users: temp })
         }
-        return res.status(400).send({ status: 'error', error: "error" })
+        return res.status(500).send({ status: 'error', error: "error" })
     })//no need to the select for filtering
 })
 router.route('/user/:username/followers').get((req, res) => {
@@ -89,7 +89,7 @@ router.route('/user/:username/followers').get((req, res) => {
             return res.status(200).send({ status: 'OK', users: temp })
         }
 
-        return res.status(400).send({ status: 'error', error: "error" })
+        return res.status(500).send({ status: 'error', error: "error" })
     })//no need to the select for filtering
 
 
@@ -103,7 +103,7 @@ async function getUserPosts(req, res) {
     if (!user) {
 
         getuserpostsDebugger('user ' + req.params.username + ' not found')
-        return res.status(400).send({ status: 'error', error: "error" })
+        return res.status(500).send({ status: 'error', error: "error" })
 
     }
 
@@ -124,7 +124,7 @@ async function getUser(req, res) {
     if (!user) {
 
         getuserDebugger('user ' + req.params.username + ' not found')
-        return res.status(400).send({ status: 'error', error: "error" })
+        return res.status(500).send({ status: 'error', error: "error" })
 
     }
 
@@ -147,7 +147,7 @@ async function toggleFollow(req, res) {
     let follow = (req.body.follow === undefined || req.body.follow === null) ? true : req.body.follow
     const target = await User.findOne({ username: req.body.username })
     if (!target)
-        return res.status(400).send({ status: "error" })
+        return res.status(500).send({ status: "error" })
     const targetFollowers = target.followers
     if (follow) {
         print(req.session.username + " is following " + req.body.username)
@@ -177,7 +177,7 @@ async function toggleFollow(req, res) {
             if (doc)
                 return res.status(200).send({ status: "OK" })
             followDebugger("something went wrong with toggling follow operation")
-            return res.status(400).send({ status: "error", error: "error" })
+            return res.status(500).send({ status: "error", error: "error" })
         })
     }
     // followDebugger(user)
@@ -252,7 +252,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     //     if (error) {
     //         adduserDebugger('error on sending email', error)
     //         // return -1
-    //         return res.status(400).send({ status: "error", error: "error" })
+    //         return res.status(500).send({ status: "error", error: "error" })
 
     //     } else {
     //         return res.status(200).send({ status: "OK" })
@@ -269,7 +269,7 @@ function addUser(req, res) {
 
     if (requestError.error) {
         adduserDebugger('error on fetching user request(contents)', requestError.error.message)
-        return res.status(400).send({ status: "error", error: "error" })
+        return res.status(500).send({ status: "error", error: "error" })
     }
 
     isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
@@ -278,7 +278,7 @@ function addUser(req, res) {
         adduserDebugger('username and email are both unique =', isUnique)
 
         if (!isUnique)
-            return res.status(400).send({ status: "error", error: "error" })
+            return res.status(500).send({ status: "error", error: "error" })
 
 
         // return res.status(200).send({ status: "ok", error: "ok" })
@@ -316,7 +316,7 @@ async function activateUser(req, res) {
     }
 
     verifyDebugger("something went wrong when update active property")
-    return res.status(400).send({ status: "error", error: "error" })
+    return res.status(500).send({ status: "error", error: "error" })
 
 }
 async function activateUserII(req, res) {
@@ -349,7 +349,7 @@ async function activateUserII(req, res) {
 
 
     verifyDebugger("something went wrong when update active property")
-    return res.status(400).send({ status: "error", error: "error" })
+    return res.status(500).send({ status: "error", error: "error" })
 
 }
 async function loginUser(req, res) {
@@ -371,7 +371,7 @@ async function loginUser(req, res) {
 
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
-    return res.status(400).send({ status: "error", error: "error" })
+    return res.status(500).send({ status: "error", error: "error" })
 
 }
 

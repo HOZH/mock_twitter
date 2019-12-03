@@ -108,19 +108,19 @@ async function addItem(req, res) {
     console.log("session: ", req.session.username);
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
-        return res.status(400).send({ status: "error", error: 'just stop asking' })
+        return res.status(500).send({ status: "error", error: 'just stop asking' })
     }
 
     if (!req.body['content']) {
         additemDebugger('empty content')
-        return res.status(400).send({ status: "error", error: 'empty content' })
+        return res.status(500).send({ status: "error", error: 'empty content' })
     }
 
     const childType = req.body.childType
 
     if (childType !== 'retweet' && childType !== 'reply' && childType !== null && childType !== undefined) {
         additemDebugger('wrong child type')
-        return res.status(400).send({ status: "error", error: 'wrong childType' })
+        return res.status(500).send({ status: "error", error: 'wrong childType' })
     }
 
 
@@ -150,7 +150,7 @@ async function addItem(req, res) {
         let temp = await Media.findOne({ id: media[i] })
         if (temp) {
             if (temp.isUse == true || temp.username != req.session.username) {
-                return res.status(400).send({ status: "error", error: 'media is use' })
+                return res.status(500).send({ status: "error", error: 'media is use' })
             } else {
                 // console.log("belong to me")
                 await Media.findOneAndUpdate({ id: media[i] }, {
@@ -198,13 +198,13 @@ async function addMedia(req, res) {
     const token = uuid.v4();
     if (false === (req.session.username || false)) {
         additemDebugger('need to login first')
-        return res.status(400).send({ status: "error", id: token, error: 'just stop asking' })
+        return res.status(500).send({ status: "error", id: token, error: 'just stop asking' })
     }
     additemDebugger("content: ", req.body.content);
 
     // if (!req.body['content']) {
     //     additemDebugger('empty content')
-    //     return res.status(400).send({ status: "error", id: token, error: 'empty content' })
+    //     return res.status(500).send({ status: "error", id: token, error: 'empty content' })
     // }
 
     const media = new Media({
@@ -233,7 +233,7 @@ async function getItem(req, res) {
             item: item
         })
     }
-    return res.status(400).send({ status: "error", error: "item not found" })
+    return res.status(500).send({ status: "error", error: "item not found" })
 }
 
 async function getMedia(req, res) {
@@ -251,7 +251,7 @@ res.writeHead(200, {'Content-Type': 'image/jpeg' });
             media: media
         })
     }
-    return res.status(400).send({ status: "error", error: "media not found" })
+    return res.status(500).send({ status: "error", error: "media not found" })
 }
 
 async function searchItem(req, res) {
@@ -508,7 +508,7 @@ async function like_or_not(req, res) {
     //     })
     // }
 
-    return res.status(400).send({ status: "error", error: "item not found" });
+    return res.status(500).send({ status: "error", error: "item not found" });
 }
 
 module.exports = router
