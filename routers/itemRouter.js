@@ -312,7 +312,17 @@ async function searchItem(req, res) {
 
 
     searchitemDebugger('q is ', req.body.q)
-    const keyWords = req.body.q ? req.body.q.split(' ').map(e => { return new RegExp(e, 'i') }) : []
+
+    
+    const keyWords = req.body.q ? req.body.q.split(' ').map(e => { 
+
+        let temp_e=e
+        if (temp_e[temp_e.length - 1] == ')')
+        temp_e=temp_e.substring(0,temp_e.length-1)
+        if (temp_e[0] == '(')
+            temp_e = temp_e.substring(1, temp_e.length)
+
+        return new RegExp(temp_e, 'i') }) : []
 
     searchitemDebugger('key words are ', keyWords)
 

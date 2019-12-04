@@ -2,6 +2,8 @@
 const express = require('express')
 const router = express.Router()
 const adduserDebugger = require('debug')('app:adduser')
+const wrongkeyDebugger = require('debug')('app:wrongkey')
+
 const loginDebugger = require('debug')('app:login')
 const verifyDebugger = require('debug')('app:verify')
 const followDebugger = require('debug')('app:follow')
@@ -302,7 +304,10 @@ async function activateUser(req, res) {
     // verifyDebugger("user: ", user)
     // if (user)
     //     return res.status(200).send({ status: "OK" })
+    
     let key = req.body.key;
+    if(key=="wrong_key")
+    wrongkeyDebugger("wrong key")
     let email = req.body.email;
     let user = await User.findOne({ email: email });
 

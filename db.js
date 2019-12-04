@@ -7,6 +7,7 @@ mongoose
         dbDebugger('Connected to MongoDB...')
     })
     .catch(err => dbDebugger('could not connect to the mongodb... ', err))
+mongoose.set('useFindAndModify', false);
 const userSchema = new mongoose.Schema({
 
     username: String,
