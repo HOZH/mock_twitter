@@ -304,10 +304,10 @@ async function activateUser(req, res) {
     // verifyDebugger("user: ", user)
     // if (user)
     //     return res.status(200).send({ status: "OK" })
-    
+
     let key = req.body.key;
-    if(key=="wrong_key")
-    wrongkeyDebugger("wrong key")
+    if (key == "wrong_key")
+        wrongkeyDebugger("wrong key")
     let email = req.body.email;
     let user = await User.findOne({ email: email });
 
@@ -362,7 +362,7 @@ async function loginUser(req, res) {
     loginDebugger(req.body)
     const user = await User.findOne({ username: req.body.username, password: req.body.password })
     loginDebugger(user)
-    if (user)
+    if (user) {
 
         if (user.active) {
 
@@ -374,6 +374,7 @@ async function loginUser(req, res) {
 
         }
 
+    }
     loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
     req.session = null
     return res.status(500).send({ status: "error", error: "error" })

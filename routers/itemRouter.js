@@ -3,6 +3,8 @@ const express = require('express')
 const router = express.Router()
 
 const getitemDebugger = require('debug')('app:getitem')
+const likeDebugger = require('debug')('app:like')
+
 const additemDebugger = require('debug')('app:additem')
 const searchitemDebugger = require('debug')('app:searchitem')
 const print = require('debug')('app:print')
@@ -18,6 +20,11 @@ const Media = db.Media
 router.route('/additem').post((req, res) => {
 
     addItem(req, res);
+})
+
+router.route('/item/:id/like').post((req, res) => {
+    print("calling like or not");
+    like_or_not(req, res)
 })
 
 router.route('/item/:itemID').get((req, res) => {
@@ -36,10 +43,7 @@ router.route('/item/:id').delete((req, res) => {
     deleteItem(req, res)
 })
 
-router.route('/item/:id/like').post((req, res) => {
-    print("calling like or not");
-    like_or_not(req, res)
-})
+
 
 router.route('/addmedia').post((req, res) => {
     addMedia(req, res);
@@ -76,6 +80,7 @@ async function performDeleteItem(req, res) {
 
         if (doc) {
             // we need to delete associated media file(s) too
+            print('my doc =' + doc)
             media = doc.media;
             if (media.length > 0) {
                 for (let i = 0; i < media.length; i++) {
@@ -91,7 +96,7 @@ async function performDeleteItem(req, res) {
             return res.status(200).send({ item: doc.id })
         }
         else {
-            return res.status(800).send({ status: 'error' })
+            return res.status(500).send({ status: 'error' })
         }
 
 
@@ -313,16 +318,17 @@ async function searchItem(req, res) {
 
     searchitemDebugger('q is ', req.body.q)
 
-    
-    const keyWords = req.body.q ? req.body.q.split(' ').map(e => { 
 
-        let temp_e=e
+    const keyWords = req.body.q ? req.body.q.split(' ').map(e => {
+
+        let temp_e = e
         if (temp_e[temp_e.length - 1] == ')')
-        temp_e=temp_e.substring(0,temp_e.length-1)
+            temp_e = temp_e.substring(0, temp_e.length - 1)
         if (temp_e[0] == '(')
             temp_e = temp_e.substring(1, temp_e.length)
 
-        return new RegExp(temp_e, 'i') }) : []
+        return new RegExp(temp_e, 'i')
+    }) : []
 
     searchitemDebugger('key words are ', keyWords)
 
@@ -453,58 +459,111 @@ async function like_or_not(req, res) {
 
     print(req.session.username)
     let id = req.params.id;
-    getitemDebugger("~~~~~~~~~~~~~~~req.params.id: ", id);
-    getitemDebugger("~~~~~~~~~~~~~~~req.body.like = " + req.body.like);
+    likeDebugger("~~~~~~~~~~~~~~~req.params.id: ", id);
+    likeDebugger("~~~~~~~~~~~~~~~req.body.like = " + req.body.like);
 
     let like = (req.body.like == false) ? false : true
     // getitemDebugger(item)
-    const item = await Item.findOne({ id: id })
-    if (like == true) {
-        getitemDebugger("~~~~~~~~~~~~~~~before update item:", item);
-        if (item && item.likeArray.indexOf(req.session.username) < 0) {
-            getitemDebugger("item.property.likes: ", item.property.likes);
-            let property = item.property;
-            getitemDebugger("propertyxxxxxxxxxxxxxxxxxx", property)
-            property.likes = property.likes + 1;
-            item.likeArray.push(req.session.username)
-            await Item.findOneAndUpdate({ id: id }, {
-                $set: {
-                    property: property
+    // const item = 
+    // await 
+    Item.findOne({ id: id }, (err, result) => {
+
+        if (err)
+            return res.status(500).send({ status: "error", error: "something went wrong" });
+
+
+        item = result
+        print('\n\nitem I found is ' + item + 'current like value is =   ' + like + '  \n\n')
+
+
+        if (item && like == true) {
+            likeDebugger("~~~~~~~~~~~~~~~before update item:", item);
+            if (item && item.likeArray.indexOf(req.session.username) < 0) {
+                likeDebugger("item.property.likes: ", item.property.likes);
+                let property = item.property;
+                likeDebugger("propertyxxxxxxxxxxxxxxxxxx", property)
+                property.likes = property.likes + 1;
+                item.likeArray.push(req.session.username)
+                // await 
+                likeDebugger("like_array", item.likeArray)
+                Item.findOneAndUpdate({ id: id }, {
+                    $set: {
+
+
+                        likeArray: [...item.likeArray],
+                        property: property
+                    }
+                }, { new: property }, () => {
+                    likeDebugger("updated item : ", item);
+                    return res.status(200).send({
+                        status: "OK",
+                        item: item
+                    })
                 }
-            }, { new: property }
-            )
+                )
 
-            await item.save();
-            getitemDebugger("updated item : ", item);
-            return res.status(200).send({
-                status: "OK",
-                item: item
-            })
-        }
-    } else if (like == false) {
-        let index = item.likeArray.indexOf(req.session.username)
-        if (item && index > -1) {
-            getitemDebugger("item.property.likes: ", item.property.likes);
-            let property = item.property;
-            getitemDebugger("propertyxxxxxxxxxxxxxxxxxx", property)
-            property.likes = property.likes - 1;
-            item.likeArray.splice(index, 1)
-            await Item.findOneAndUpdate({ id: id }, {
-                $set: {
-                    property: property
+                // await
+                // item.save(() => {
+                //     getitemDebugger("updated item : ", item);
+                //     return res.status(200).send({
+                //         status: "OK",
+                //         item: item
+                //     })
+                // });
+
+            } else {
+                likeDebugger('qien error')
+                return res.status(200).send({ status: "OK", error: "qien error" });
+
+            }
+        } else if (item && like == false) {
+            let index = item.likeArray.indexOf(req.session.username)
+            if (item && index > -1) {
+                likeDebugger("item.property.likes: ", item.property.likes);
+                let property = item.property;
+                likeDebugger("propertyxxxxxxxxxxxxxxxxxx", property)
+                property.likes = property.likes - 1;
+                item.likeArray.splice(index, 1)
+                // await
+                Item.findOneAndUpdate({ id: id }, {
+                    $set: {
+                        likeArray: [...item.likeArray],
+
+                        property: property
+                    }
+                }, { new: property }, () => {
+                    likeDebugger("updated item : ", item);
+                    return res.status(200).send({
+                        status: "OK",
+                        item: item
+                    })
                 }
-            }, { new: property }
-            )
+                )
 
-            await item.save();
-            getitemDebugger("updated item : ", item);
-            return res.status(200).send({
-                status: "OK",
-                item: item
-            })
+                // await
+                // item.save(() => {
+                //     getitemDebugger("updated item : ", item);
+                //     return res.status(200).send({
+                //         status: "OK",
+                //         item: item
+                //     })
+                // });
+
+
+            } else {
+
+                return res.status(200).send({ status: "OK", error: "item not found" });
+
+            }
+        }
+
+        else {
+
+            return res.status(500).send({ status: "error", error: "item not found" });
 
         }
-    }
+    })
+
 
     // if (item) {
     //     getitemDebugger("item.property.likes: ", item.property.likes);
@@ -518,7 +577,7 @@ async function like_or_not(req, res) {
     //     })
     // }
 
-    return res.status(500).send({ status: "error", error: "item not found" });
+    // return res.status(500).send({ status: "error", error: "item not found" });
 }
 
 module.exports = router
