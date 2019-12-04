@@ -232,7 +232,7 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     let link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
 
 
-    let html = text + "   Hello, Please Click on the link to verify your email. <a href=" + link + ">" + text + "</a>"
+    let html = text
 
     mailOptions = {
         to: req.body.email,
