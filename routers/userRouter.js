@@ -28,8 +28,9 @@ const smtpTransport = nodemailer.createTransport(({
 
 
 router.route('/adduser').post((req, res) => {
+    my_addUser(req,res)
 
-    addUser(req, res)
+    // addUser(req, res)
 
 })
 
@@ -225,27 +226,44 @@ async function createUserAndSentEmail(username, email, password, active, req, re
         followers: {}
 
     })
-    const result = await user.save()
+    // const result = await
+     user.save(()=>{
+         const text = 'validation key: <' + token + '>'
 
-    adduserDebugger(result)
-
-    const text = 'validation key: <' + token + '>'
-
-    let link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
+         let link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
 
 
-    let html = "<a href=" + link + ">" + text + "</a>"
+         let html = "<a href=" + link + ">" + text + "</a>"
 
-    mailOptions = {
-        to: req.body.email,
-        subject: "mock_twitter Please confirm your Email account",
-        html: html
-    }
+         mailOptions = {
+             to: req.body.email,
+             subject: "mock_twitter Please confirm your Email account",
+             html: html
+         }
 
-    // return res.status(200).send({ status: "OK" })
 
-    res.status(200).send({ status: "OK" })
-    return smtpTransport.sendMail(mailOptions)
+         res.status(200).send({ status: "OK" })
+         return smtpTransport.sendMail(mailOptions)
+     })
+
+    // adduserDebugger(result)
+
+    // const text = 'validation key: <' + token + '>'
+
+    // let link = "http://" + req.get('host') + "/verify/" + req.body.email + "/" + token;
+
+
+    // let html = "<a href=" + link + ">" + text + "</a>"
+
+    // mailOptions = {
+    //     to: req.body.email,
+    //     subject: "mock_twitter Please confirm your Email account",
+    //     html: html
+    // }
+
+
+    // res.status(200).send({ status: "OK" })
+    // return smtpTransport.sendMail(mailOptions)
 
 
 
@@ -264,7 +282,10 @@ async function createUserAndSentEmail(username, email, password, active, req, re
     // });
 }
 
-function addUser(req, res) {
+
+async function my_addUser(req, res) {
+
+
 
     adduserDebugger(req.body)
     const requestError = isValidateAdduserRequest(req)
@@ -274,24 +295,66 @@ function addUser(req, res) {
         return res.status(500).send({ status: "error", error: "error" })
     }
 
-    isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
+    else {
 
-        const isUnique = value === 0
-        adduserDebugger('username and email are both unique =', isUnique)
+        let username= req.body.username
+        let email = req.body.email
 
-        if (!isUnique)
-            return res.status(500).send({ status: "error", error: "error" })
+        // const user = await
+         User.find({ $or: [{ username: username }, { email: email }] },(err,result)=>{
+             if(err)
+                 return res.status(500).send({ status: "error", error: "error" })
+
+             const isUnique = result.length === 0
+             if (!isUnique)
+                 return res.status(500).send({ status: "error", error: "error" })
+
+             createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
 
 
-        // return res.status(200).send({ status: "ok", error: "ok" })
+
+        })
+        
+
+    }
+}
+
+async function addUser(req, res) {
+
+    adduserDebugger(req.body)
+    const requestError = await isValidateAdduserRequest(req)
+
+    if (requestError.error) {
+        adduserDebugger('error on fetching user request(contents)', requestError.error.message)
+        return res.status(500).send({ status: "error", error: "error" })
+    }
+
+    else {
+
+        isUsernameEmailUnique(req.body.username, req.body.email).then(value => {
+
+            const isUnique = value === 0
+            adduserDebugger('username and email are both unique =', isUnique)
+
+            if (!isUnique)
+                return res.status(500).send({ status: "error", error: "error" })
 
 
-        createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
+            // return res.status(200).send({ status: "ok", error: "ok" })
 
-    })
+
+            createUserAndSentEmail(req.body.username, req.body.email, req.body.password, false, req, res)
+
+        })
+    }
 }
 
 async function activateUser(req, res) {
+
+let t=0
+    for(let i = 0;i<1000;i++){
+        t+=i
+    }
 
     verifyDebugger("req.body:", req.body)                                //abracadabra
     // const user = await User.findOneAndUpdate({ uuid: { $in: ['abracadabra', req.body.key] }, email: req.body.email },
@@ -309,19 +372,52 @@ async function activateUser(req, res) {
     if (key == "wrong_key")
         wrongkeyDebugger("wrong key")
     let email = req.body.email;
-    let user = await User.findOne({ email: email });
+    // let user = await
+    User.findOne({ email: email }, (err, result) => {
 
-    if (user) {
-        if ((key == "abracadabra") || (key == user.uuid)) {
-            user.active = true;
-            await user.save();
-            verifyDebugger("user verify successed");
-            return res.status(200).send({ status: "OK" });
+        if (err)
+            return res.status(500).send({ status: "error", error: "error" })
+
+
+
+        let current_user = result
+
+
+        if (current_user) {
+            if ((key == "abracadabra") || (key == user.uuid)) {
+                current_user.active = true;
+                // await
+                User.findOneAndUpdate({ email: current_user.email },
+                    {
+                        $set: {
+                            active: true
+                        }
+
+                    }, () => {
+                        verifyDebugger("user verify successed");
+                        return res.status(200).send({ status: "OK" });
+                    })
+                //  current_user.save(() => {
+                //     verifyDebugger("user verify successed");
+                //     return res.status(200).send({ status: "OK" });
+                // });
+
+            }
+            else {
+                return res.status(500).send({ status: "error", error: "error" })
+
+            }
         }
-    }
 
-    verifyDebugger("something went wrong when update active property")
-    return res.status(500).send({ status: "error", error: "error" })
+        else {
+
+            verifyDebugger("something went wrong when update active property")
+            return res.status(500).send({ status: "error", error: "error" })
+        }
+        // verifyDebugger("something went wrong when update active property")
+        // return res.status(500).send({ status: "error", error: "error" })
+    });
+
 
 }
 async function activateUserII(req, res) {
@@ -359,25 +455,52 @@ async function activateUserII(req, res) {
 }
 async function loginUser(req, res) {
 
+    let t = 0
+    for (let i = 0; i < 1000; i++) {
+        t += i
+    }
+
     loginDebugger(req.body)
-    const user = await User.findOne({ username: req.body.username, password: req.body.password })
-    loginDebugger(user)
-    if (user) {
+    // const user = await
+    User.findOne({ username: req.body.username, password: req.body.password }, (err, result) => {
+        if (err)
+            return res.status(500).send({ status: "error", error: "error" })
 
-        if (user.active) {
 
-            loginDebugger("log in performed")
-            req.session.isLogin = true
-            req.session.username = req.body.username
-            // req.session.user =
-            return res.status(200).send({ status: "OK" })
+
+        let current_user = result
+        if (current_user) {
+
+            if (current_user.active) {
+
+                req.session.isLogin = true
+                req.session.username = req.body.username
+
+                loginDebugger("log in performed")
+
+                // req.session.user =
+                return res.status(200).send({ status: "OK" })
+
+            }
+            else {
+                loginDebugger('not activated user')
+                req.session = null
+                return res.status(500).send({ status: "error", error: "error" })
+            }
 
         }
+        else {
 
-    }
-    loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
-    req.session = null
-    return res.status(500).send({ status: "error", error: "error" })
+            req.session = null
+            return res.status(500).send({ status: "error", error: "error" })
+        }
+
+    })
+    // loginDebugger(user)
+
+    // loginDebugger('fail to log in', user ? "current account has not been enabled" : "username/password does not match record on the server")
+    // req.session = null
+    // return res.status(500).send({ status: "error", error: "error" })
 
 }
 
